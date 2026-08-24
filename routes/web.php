@@ -17,9 +17,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\OfficeController;
 use App\Http\Controllers\ReportController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+ Route::get('/', DashboardController::class);
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
