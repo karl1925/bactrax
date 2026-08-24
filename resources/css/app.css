@@ -1,0 +1,672 @@
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+@variant dark (&:where(.dark, .dark *));
+
+@source "../views";
+@source "../js";
+
+:root {
+    --gov-blue: #134991;
+    --gov-blue-dark: #103d7b;
+    --gov-blue-light: #edf4fc;
+
+    --gov-gold: #fbd349;
+    --gov-gold-light: #fff8d9;
+
+    --slate-950: #020617;
+    --slate-900: #0f172a;
+    --slate-800: #1e293b;
+    --slate-700: #334155;
+    --slate-600: #475569;
+    --slate-500: #64748b;
+    --slate-400: #94a3b8;
+    --slate-300: #cbd5e1;
+    --slate-200: #e2e8f0;
+    --slate-100: #f1f5f9;
+    --slate-50: #f8fafc;
+
+    --success: #16a34a;
+    --danger: #dc2626;
+    --warning: #d97706;
+    --info: #2563eb;
+}
+
+/*
+|--------------------------------------------------------------------------
+| BASE
+|--------------------------------------------------------------------------
+*/
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family:
+        'Inter',
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| CUSTOM SCROLLBAR (LIGHT & DARK)
+|--------------------------------------------------------------------------
+*/
+
+::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--slate-100);
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: var(--slate-900);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--slate-300);
+    border-radius: 999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: var(--slate-700);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--slate-400);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: var(--slate-600);
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| FORMS
+|--------------------------------------------------------------------------
+*/
+
+.form-input,
+.form-select,
+.form-textarea {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    @apply border-blue-500 ring-2 ring-blue-100 dark:ring-blue-900/30;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| CARDS
+|--------------------------------------------------------------------------
+*/
+
+.card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| BUTTONS
+|--------------------------------------------------------------------------
+*/
+
+.btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[#134991] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#103d7b] focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800;
+}
+
+.btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:focus:ring-slate-800;
+}
+
+.btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600;
+}
+
+
+/* ========================================================================
+   DATATABLES (FULL LIGHT & DARK MODE COLUMN STYLING)
+   ======================================================================== */
+
+.dataTables_wrapper {
+    width: 100%;
+    font-size: 0.8125rem;
+    color: var(--slate-700);
+}
+
+.dark .dataTables_wrapper {
+    color: var(--slate-300);
+}
+
+/* Controls Spacing */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 1rem;
+}
+
+.dataTables_wrapper .dataTables_length label,
+.dataTables_wrapper .dataTables_filter label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--slate-500);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.dark .dataTables_wrapper .dataTables_length label,
+.dark .dataTables_wrapper .dataTables_filter label {
+    color: var(--slate-400);
+}
+
+/* Length Select */
+.dataTables_wrapper .dataTables_length select {
+    height: 36px;
+    min-width: 70px;
+    padding: 0.35rem 1.8rem 0.35rem 0.7rem;
+    border: 1px solid var(--slate-300);
+    border-radius: 0.5rem;
+    background-color: #fff;
+    color: var(--slate-700);
+    font-size: 0.75rem;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.dark .dataTables_wrapper .dataTables_length select {
+    border-color: var(--slate-700);
+    background-color: var(--slate-900);
+    color: var(--slate-200);
+}
+
+.dataTables_wrapper .dataTables_length select:hover {
+    border-color: var(--slate-400);
+}
+
+.dataTables_wrapper .dataTables_length select:focus {
+    border-color: var(--gov-blue);
+    box-shadow: 0 0 0 3px rgb(19 73 145 / 0.10);
+}
+
+/* Filter Input */
+.dataTables_wrapper .dataTables_filter input {
+    width: 240px;
+    height: 36px;
+    margin-left: 0.25rem;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--slate-300);
+    border-radius: 0.5rem;
+    background: #fff;
+    color: var(--slate-700);
+    font-size: 0.75rem;
+    outline: none;
+    transition: all 0.15s ease;
+}
+
+.dark .dataTables_wrapper .dataTables_filter input {
+    border-color: var(--slate-700);
+    background: var(--slate-900);
+    color: var(--slate-200);
+}
+
+.dataTables_wrapper .dataTables_filter input::placeholder {
+    color: var(--slate-400);
+}
+
+.dataTables_wrapper .dataTables_filter input:hover {
+    border-color: var(--slate-400);
+}
+
+.dataTables_wrapper .dataTables_filter input:focus {
+    border-color: var(--gov-blue);
+    box-shadow: 0 0 0 3px rgb(19 73 145 / 0.10);
+}
+
+/* Table Elements */
+.dataTables_wrapper table.dataTable {
+    width: 100% !important;
+    margin: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0;
+    table-layout: auto;
+}
+
+/* Table Header */
+.dataTables_wrapper table.dataTable thead th,
+.dataTables_wrapper table.dataTable thead td {
+    padding: 0.75rem 0.8rem !important;
+    border-bottom: 1px solid var(--slate-200) !important;
+    background: #f8fafc;
+    color: var(--slate-500);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.dark .dataTables_wrapper table.dataTable thead th,
+.dark .dataTables_wrapper table.dataTable thead td {
+    border-bottom-color: var(--slate-800) !important;
+    background: var(--slate-950);
+    color: var(--slate-400);
+}
+
+.dataTables_wrapper table.dataTable thead th:first-child {
+    border-top-left-radius: 0.65rem;
+}
+
+.dataTables_wrapper table.dataTable thead th:last-child {
+    border-top-right-radius: 0.65rem;
+}
+
+/* Table Body Cells */
+.dataTables_wrapper table.dataTable tbody td {
+    padding: 0.65rem 0.8rem !important;
+    border-bottom: 1px solid #eef2f7 !important;
+    color: var(--slate-700);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    vertical-align: middle;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.dark .dataTables_wrapper table.dataTable tbody td {
+    border-bottom-color: rgb(30 41 59 / 0.6) !important;
+    color: var(--slate-300);
+}
+
+/* Table Rows Base Background */
+.dataTables_wrapper table.dataTable tbody tr {
+    background: #ffffff;
+    transition: background-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.dark .dataTables_wrapper table.dataTable tbody tr {
+    background: var(--slate-900);
+}
+
+/* Row Hover States */
+.dataTables_wrapper table.dataTable tbody tr:hover {
+    background: #f8fbff;
+}
+
+.dark .dataTables_wrapper table.dataTable tbody tr:hover {
+    background: rgb(30 41 59 / 0.6);
+}
+
+.dataTables_wrapper table.dataTable tbody tr:last-child td,
+.dataTables_wrapper table.dataTable.no-footer {
+    border-bottom: 0 !important;
+}
+
+/* Column Specific Typographies */
+.dataTables_wrapper table.dataTable tbody td:first-child {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.dataTables_wrapper table.dataTable tbody td:nth-child(5) {
+    white-space: nowrap;
+}
+
+/* Column Alignments & DataTypes (DataTables 2.x Support) */
+.dataTables_wrapper table.dataTable td.dt-type-numeric,
+.dataTables_wrapper table.dataTable td.dt-type-date,
+.dataTables_wrapper table.dataTable td.text-right {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.dataTables_wrapper table.dataTable td.dt-type-center,
+.dataTables_wrapper table.dataTable td.text-center {
+    text-align: center;
+}
+
+/* Action Column */
+.dataTables_wrapper table.dataTable th:last-child,
+.dataTables_wrapper table.dataTable td:last-child {
+    width: 1%;
+    white-space: nowrap;
+    text-align: right;
+}
+
+.dataTables_wrapper table.dataTable td:last-child a,
+.dataTables_wrapper table.dataTable td:last-child button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: 30px;
+    padding: 0.35rem 0.6rem !important;
+    border-radius: 0.45rem;
+    font-size: 0.68rem !important;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+/* ========================================================================
+   SORTED COLUMNS (LIGHT & DARK MODE OVERRIDES)
+   ======================================================================== */
+
+/* Active Sorted Column (Light Mode) */
+.dataTables_wrapper table.dataTable tbody td.sorting_1,
+.dataTables_wrapper table.dataTable tbody th.sorting_1 {
+    background-color: #f1f5f9 !important;
+}
+
+.dataTables_wrapper table.dataTable tbody td.sorting_2,
+.dataTables_wrapper table.dataTable tbody td.sorting_3 {
+    background-color: #f8fafc !important;
+}
+
+/* Active Sorted Column (Dark Mode) */
+.dark .dataTables_wrapper table.dataTable tbody td.sorting_1,
+.dark .dataTables_wrapper table.dataTable tbody th.sorting_1 {
+    background-color: rgb(15 23 42 / 0.75) !important;
+}
+
+.dark .dataTables_wrapper table.dataTable tbody td.sorting_2,
+.dark .dataTables_wrapper table.dataTable tbody td.sorting_3 {
+    background-color: rgb(15 23 42 / 0.5) !important;
+}
+
+/* Row Hover State for Sorted Columns */
+.dataTables_wrapper table.dataTable tbody tr:hover td.sorting_1 {
+    background-color: #e2e8f0 !important;
+}
+
+.dark .dataTables_wrapper table.dataTable tbody tr:hover td.sorting_1 {
+    background-color: rgb(30 41 59 / 0.8) !important;
+}
+
+/* Column Header Sorting Indicators */
+.dataTables_wrapper table.dataTable thead th.sorting,
+.dataTables_wrapper table.dataTable thead th.sorting_asc,
+.dataTables_wrapper table.dataTable thead th.sorting_desc {
+    padding-right: 1.5rem !important;
+    cursor: pointer;
+}
+
+.dataTables_wrapper table.dataTable thead th:hover {
+    background: #f1f5f9;
+    color: var(--gov-blue);
+}
+
+.dark .dataTables_wrapper table.dataTable thead th:hover {
+    background: var(--slate-900);
+    color: #60a5fa;
+}
+
+.dataTables_wrapper table.dataTable thead th.sorting_asc,
+.dataTables_wrapper table.dataTable thead th.sorting_desc {
+    color: var(--gov-blue);
+}
+
+.dark .dataTables_wrapper table.dataTable thead th.sorting_asc,
+.dark .dataTables_wrapper table.dataTable thead th.sorting_desc {
+    color: #60a5fa;
+}
+
+/* Empty State */
+.dataTables_wrapper table.dataTable tbody td.dataTables_empty {
+    padding: 3rem 1rem !important;
+    color: var(--slate-400);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/*
+|--------------------------------------------------------------------------
+| PAGINATION (LIGHT & DARK MODE)
+|--------------------------------------------------------------------------
+*/
+
+.dataTables_wrapper .dataTables_paginate {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.3rem;
+    padding-top: 0.9rem !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    margin: 0 !important;
+    padding: 0.4rem 0.65rem !important;
+    border: 1px solid var(--slate-200) !important;
+    border-radius: 0.5rem !important;
+    background: #fff !important;
+    color: var(--slate-600) !important;
+    font-size: 0.7rem !important;
+    font-weight: 600;
+    line-height: 1;
+    box-shadow: 0 1px 1px rgb(15 23 42 / 0.03);
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-color: var(--slate-800) !important;
+    background: var(--slate-900) !important;
+    color: var(--slate-300) !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:not(.current):not(.disabled):hover {
+    background: var(--gov-blue-light) !important;
+    border-color: #b7c9e2 !important;
+    color: var(--gov-blue) !important;
+    box-shadow: 0 2px 5px rgb(19 73 145 / 0.08);
+}
+
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button:not(.current):not(.disabled):hover {
+    background: var(--slate-800) !important;
+    border-color: var(--slate-700) !important;
+    color: #60a5fa !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: var(--gov-blue) !important;
+    border-color: var(--gov-blue) !important;
+    color: #fff !important;
+    box-shadow: 0 3px 7px rgb(19 73 145 / 0.22);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background: var(--gov-blue-dark) !important;
+    border-color: var(--gov-blue-dark) !important;
+    color: #fff !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+    background: #f8fafc !important;
+    border-color: var(--slate-200) !important;
+    color: var(--slate-300) !important;
+    opacity: 0.7;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+    background: var(--slate-950) !important;
+    border-color: var(--slate-800) !important;
+    color: var(--slate-600) !important;
+}
+
+.dataTables_wrapper .dataTables_info {
+    padding-top: 0.9rem !important;
+    color: var(--slate-500);
+    font-size: 0.7rem;
+    line-height: 1.5;
+}
+
+.dark .dataTables_wrapper .dataTables_info {
+    color: var(--slate-400);
+}
+
+.dataTables_wrapper>.row,
+.dt-container>.dt-layout-row {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| RESPONSIVE BREAKPOINTS FOR DATATABLES
+|--------------------------------------------------------------------------
+*/
+
+@media (max-width: 1024px) {
+
+    .dataTables_wrapper table.dataTable thead th,
+    .dataTables_wrapper table.dataTable tbody td {
+        padding-left: 0.6rem !important;
+        padding-right: 0.6rem !important;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        width: 210px;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        float: none !important;
+        width: 100%;
+        margin-bottom: 0.6rem;
+        text-align: left !important;
+    }
+
+    .dataTables_wrapper .dataTables_filter label {
+        width: 100%;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        width: 100%;
+        max-width: none;
+        margin-left: 0;
+    }
+
+    .dataTables_wrapper table.dataTable thead th {
+        padding: 0.55rem !important;
+        font-size: 0.64rem;
+    }
+
+    .dataTables_wrapper table.dataTable tbody td {
+        padding: 0.55rem !important;
+        font-size: 0.7rem;
+    }
+
+    .dataTables_wrapper .dataTables_info {
+        width: 100%;
+        text-align: center;
+    }
+
+    .dataTables_wrapper .dataTables_paginate {
+        justify-content: center;
+        width: 100%;
+        margin-top: 0.4rem;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        min-width: 32px;
+        height: 32px;
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| MODAL STYLES (LIGHT & DARK)
+|--------------------------------------------------------------------------
+*/
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgb(15 23 42 / 0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+.modal-panel {
+    background: #fff;
+    border: 1px solid var(--slate-200);
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 50px rgb(15 23 42 / 0.18);
+}
+
+.dark .modal-panel {
+    background: var(--slate-900);
+    border-color: var(--slate-800);
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| ACCESSIBILITY (FIXED FOCUS VISIBLE)
+| Excludes elements with .outline-none / focus:outline-none / [style*="outline: none"]
+|--------------------------------------------------------------------------
+*/
+
+button:focus-visible:not(.outline-none):not([class*="outline-none"]),
+a:focus-visible:not(.outline-none):not([class*="outline-none"]),
+input:focus-visible:not(.outline-none):not([class*="outline-none"]),
+select:focus-visible:not(.outline-none):not([class*="outline-none"]),
+textarea:focus-visible:not(.outline-none):not([class*="outline-none"]) {
+    outline: 2px solid var(--gov-blue);
+    outline-offset: 2px;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| PRINT STYLES
+|--------------------------------------------------------------------------
+*/
+
+@media print {
+
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter,
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        display: none !important;
+    }
+
+    .dataTables_wrapper table.dataTable {
+        width: 100% !important;
+    }
+}
