@@ -69,7 +69,7 @@ class ProcurementDataTableController extends Controller
             0 => 'tracking_number',
             1 => 'title',
             2 => 'end_user_office_id',
-            3 => 'procurement_mode_id',
+            3 => 'procurement_mode_code',
             4 => 'abc_amount',
             5 => 'status',
         ];
@@ -88,7 +88,7 @@ class ProcurementDataTableController extends Controller
                     'tracking_number' => '<span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">' . e($p->tracking_number) . '</span>',
                     'title' => e($p->title),
                     'office_code' => e($p->endUserOffice->code ?? 'N/A'),
-                    'mode_name' => e($p->mode->name ?? 'N/A'),
+                    'mode_code' => e($p->mode->code ?? 'N/A'),
                     'abc_formatted' => '₱ ' . number_format($p->abc_amount, 2),
                     'status' => $p->status,
                     'actions' => '<a href="' . route('procurements.show', $p->id) . '" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-xs">View</a>',

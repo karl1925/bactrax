@@ -8,6 +8,7 @@ use App\Models\ProcurementHistory;
 use App\Models\User;
 use App\Exceptions\ProcurementWorkflowException;
 use Illuminate\Support\Facades\DB;
+use App\Events\{ProcurementStatusUpdated};
 
 class ProcurementWorkflowEngine
 {
@@ -18,10 +19,10 @@ class ProcurementWorkflowEngine
         Procurement $procurement,
         User $actor,
         int $destinationOfficeId,
-        ?string $remarks = null,
-        ?int $targetUserId = null
+        ?int $targetUserId = null,
+        ?string $remarks = null
     ): Procurement {
-        return DB::transaction(function () use ($procurement, $actor, $destinationOfficeId, $remarks, $targetUserId) {
+        return DB::transaction(function () use ($procurement, $actor, $destinationOfficeId, $targetUserId, $remarks) {
             $currentPhase = $procurement->currentPhase;
 
             // 1. Mandatory Document Check for Current Phase
@@ -95,6 +96,8 @@ class ProcurementWorkflowEngine
 
             $actorOffice = $actor->offices()->first();
 
+            $remarks = $remarks ?? "Advanced to phase {$nextPhase?->phase_name}";
+
             ProcurementRoute::create([
                 'procurement_id' => $procurement->id,
                 'from_office_id' => $actorOffice ? $actorOffice->id : $procurement->end_user_office_id,
@@ -114,9 +117,11 @@ class ProcurementWorkflowEngine
                 'action' => 'PHASE_TRANSITION',
                 'status_from' => $previousStatus,
                 'status_to' => $procurement->status,
-                'remarks' => $remarks ?? "Advanced to phase {$nextPhase?->phase_name}",
+                'remarks' => $remarks,
                 'created_at' => now(),
             ]);
+
+            ProcurementStatusUpdated::dispatch($procurement->id, $destinationOfficeId, $targetUserId, 'ROUTED', $remarks);
 
             return $procurement;
         });
@@ -131,7 +136,9 @@ class ProcurementWorkflowEngine
         Procurement $procurement,
         User $actor,
         int $targetPhaseId,
-        string $reason
+        int $destinationOfficeId,
+        ?int $targetUserId = null,
+        ?string $reason = null
     ): Procurement {
         $firstPhaseSeq = $procurement->mode?->phases?->min('phase_sequence') ?? 1;
 
@@ -140,7 +147,9 @@ class ProcurementWorkflowEngine
             throw new ProcurementWorkflowException("Procurements in Phase 1 cannot be returned.");
         }
 
-        return DB::transaction(function () use ($procurement, $actor, $targetPhaseId, $reason) {
+        return DB::transaction(function () use ($procurement, $actor, $targetPhaseId, $destinationOfficeId, $targetUserId, $reason) {
+
+
             $previousStatus = $procurement->status;
 
             $procurement->returned_from_phase_id = $procurement->current_phase_id;
@@ -155,11 +164,14 @@ class ProcurementWorkflowEngine
                 ->whereNull('acted_at')
                 ->update(['acted_at' => now()]);
 
+            $reason = "Returned to [{$targetPhase?->phase_name}]. Reason: {$reason}. By: {$actor->name}";
+
             ProcurementRoute::create([
                 'procurement_id' => $procurement->id,
-                'from_office_id' => $actorOffice ? $actorOffice->id : $procurement->end_user_office_id,
-                'to_office_id' => $procurement->end_user_office_id,
+                'from_office_id' => $actorOffice->id,
+                'to_office_id' => $destinationOfficeId,
                 'from_user_id' => $actor->id,
+                'to_user_id' => $targetUserId,
                 'action_taken' => "RETURNED TO: {$targetPhase?->phase_name}",
                 'remarks' => $reason,
                 'received_at' => now(),
@@ -172,9 +184,11 @@ class ProcurementWorkflowEngine
                 'action' => 'RETURNED_TO_PHASE',
                 'status_from' => $previousStatus,
                 'status_to' => 'RETURNED',
-                'remarks' => "Returned to [{$targetPhase?->phase_name}]. Reason: {$reason}",
+                'remarks' => $reason,
                 'created_at' => now(),
             ]);
+
+            ProcurementStatusUpdated::dispatch($procurement->id, $destinationOfficeId, $targetUserId, 'RETURNED', $reason);
 
             return $procurement;
         });
@@ -188,7 +202,7 @@ class ProcurementWorkflowEngine
         User $actor,
         ?string $remarks = null
     ): Procurement {
-        if (in_array($procurement->status, ['COMPLETED', 'CANCELLED'])) {
+        if (in_array($procurement->status, ['COMPLETED', 'CANCELLED', 'REJECTED'])) {
             throw new ProcurementWorkflowException("Procurement is already in a terminal state.");
         }
 
@@ -204,13 +218,16 @@ class ProcurementWorkflowEngine
 
             $actorOffice = $actor->offices()->first();
 
+            $remarks = $remarks ?? 'Procurement workflow marked as completed.';
+
             ProcurementRoute::create([
                 'procurement_id' => $procurement->id,
                 'from_office_id' => $actorOffice ? $actorOffice->id : $procurement->end_user_office_id,
                 'to_office_id' => $procurement->end_user_office_id,
                 'from_user_id' => $actor->id,
+                'to_user_id' => $procurement->end_user_id,
                 'action_taken' => 'COMPLETED',
-                'remarks' => $remarks ?? 'Procurement workflow marked as completed.',
+                'remarks' => $remarks,
                 'received_at' => now(),
             ]);
 
@@ -221,9 +238,11 @@ class ProcurementWorkflowEngine
                 'action' => 'COMPLETED',
                 'status_from' => $previousStatus,
                 'status_to' => 'COMPLETED',
-                'remarks' => $remarks ?? 'Procurement successfully completed.',
+                'remarks' => $remarks,
                 'created_at' => now(),
             ]);
+
+            ProcurementStatusUpdated::dispatch($procurement->id, $procurement->end_user_office_id, $procurement->end_user_id, 'COMPLATED', $remarks);
 
             return $procurement;
         });
@@ -253,11 +272,14 @@ class ProcurementWorkflowEngine
 
             $actorOffice = $actor->offices()->first();
 
+            $remarks = "Reason: {$reason}";
+
             ProcurementRoute::create([
                 'procurement_id' => $procurement->id,
-                'from_office_id' => $actorOffice ? $actorOffice->id : $procurement->end_user_office_id,
+                'from_office_id' => $actorOffice->id,
                 'to_office_id' => $procurement->end_user_office_id,
                 'from_user_id' => $actor->id,
+                'to_user_id' => $procurement->end_user_id,
                 'action_taken' => 'CANCELLED',
                 'remarks' => $reason,
                 'received_at' => now(),
@@ -270,9 +292,11 @@ class ProcurementWorkflowEngine
                 'action' => 'CANCELLED',
                 'status_from' => $previousStatus,
                 'status_to' => 'CANCELLED',
-                'remarks' => "Cancelled. Reason: {$reason}",
+                'remarks' => $reason,
                 'created_at' => now(),
             ]);
+
+            ProcurementStatusUpdated::dispatch($procurement->id, $procurement->end_user_office_id, $procurement->end_user_id, 'CANCELED', $remarks);
 
             return $procurement;
         });
@@ -302,6 +326,8 @@ class ProcurementWorkflowEngine
 
             $actorOffice = $actor->offices()->first();
 
+            $remarks = "Reason: {$reason}";
+
             ProcurementRoute::create([
                 'procurement_id' => $procurement->id,
                 'from_office_id' => $actorOffice ? $actorOffice->id : $procurement->end_user_office_id,
@@ -319,9 +345,11 @@ class ProcurementWorkflowEngine
                 'action' => 'REJECTED',
                 'status_from' => $previousStatus,
                 'status_to' => 'CANCELLED',
-                'remarks' => "Rejected. Reason: {$reason}",
+                'remarks' => $reason,
                 'created_at' => now(),
             ]);
+
+            ProcurementStatusUpdated::dispatch($procurement->id, $procurement->end_user_office_id, $procurement->end_user_id, 'REJECTED', $remarks);
 
             return $procurement;
         });

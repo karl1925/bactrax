@@ -31,16 +31,12 @@ class DashboardController extends Controller
 
         $query = Procurement::query()
             ->when(!$user->isCentralRole(), function ($q) use ($userOfficeIds) {
-
                 $q->where(function ($subQ) use ($userOfficeIds) {
-
                     $subQ->whereIn(
                         'end_user_office_id',
                         $userOfficeIds
                     )
-
                         ->orWhereHas('routes', function ($routeQ) use ($userOfficeIds) {
-
                             $routeQ->whereIn(
                                 'to_office_id',
                                 $userOfficeIds
@@ -125,11 +121,9 @@ class DashboardController extends Controller
             ->orderByDesc('updated_at')
             ->get()
             ->filter(function ($item) use ($user) {
-
                 if (!$item->currentPhase) {
                     return false;
                 }
-
                 return $user->canActOnPhase(
                     $item->currentPhase
                 );

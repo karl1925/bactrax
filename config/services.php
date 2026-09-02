@@ -34,5 +34,7 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
+    'pdf_signer' => [
+        'url' => env('PDF_SIGNER_URL', 'http://127.0.0.1:8002'),
+    ],
 ];

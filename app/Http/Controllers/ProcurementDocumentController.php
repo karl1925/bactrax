@@ -77,8 +77,8 @@ class ProcurementDocumentController extends Controller
      */
     public function destroy(Procurement $procurement, ProcurementDocument $document)
     {
-        if ($procurement->status === 'APPROVED') {
-            return back()->with('error', 'Cannot delete document attachments from approved procurements.');
+        if ($procurement->status === 'COMPLETED') {
+            return back()->with('error', 'Cannot delete document attachments from completed procurements.');
         }
 
         // Delete physical file

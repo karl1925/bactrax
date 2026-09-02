@@ -183,7 +183,7 @@
                 { data: 'tracking_number', name: 'tracking_number' },
                 { data: 'title', name: 'title' },
                 { data: 'office_code', name: 'offices.code' },
-                { data: 'mode_name', name: 'procurement_modes.name' },
+                { data: 'mode_name', name: 'procurement_modes.code' },
                 { data: 'abc_formatted', name: 'abc_amount', className: 'text-right' },
                 { 
                     data: 'status', 

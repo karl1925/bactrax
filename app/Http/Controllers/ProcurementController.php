@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProcurementRequest;
 use App\Models\Procurement;
 use App\Models\ProcurementMode;
-use App\Models\Office;
+use App\Models\ProcurementModePhase;
+use App\Models\{User, Office};
 use App\Models\ProcurementDocument;
 use App\Models\Setting;
 use Illuminate\Http\Request;
@@ -193,5 +194,120 @@ class ProcurementController extends Controller
         ]);
 
         return back()->with('success', 'Phase document attached successfully.');
+    }
+
+    public function returnTargetOffices(ProcurementModePhase $phase)
+    {
+        // Get roles authorized for this phase
+        $roleIds = $phase->roles()
+            ->pluck('roles.id');
+
+        // No roles configured for this phase
+        if ($roleIds->isEmpty()) {
+            return response()->json([
+                'offices' => [],
+            ]);
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | Find offices that have at least one user who:
+    | 1. Belongs to the office
+    | 2. Has one of the authorized phase roles
+    |--------------------------------------------------------------------------
+    */
+
+        $offices = Office::query()
+            ->where('is_active', true)
+            ->whereHas('users', function ($query) use ($roleIds) {
+                $query->whereHas('roles', function ($roleQuery) use ($roleIds) {
+                    $roleQuery->whereIn('roles.id', $roleIds);
+                });
+            })
+            ->orderBy('name')
+            ->get([
+                'id',
+                'name',
+                'code',
+                'location_type',
+            ]);
+
+        return response()->json([
+            'offices' => $offices,
+        ]);
+    }
+
+
+    public function returnTargetUsers(
+        ProcurementModePhase $phase,
+        Office $office
+    ) {
+        /*
+    |--------------------------------------------------------------------------
+    | Get roles authorized for the selected return phase
+    |--------------------------------------------------------------------------
+    */
+
+        $roleIds = $phase->roles()
+            ->pluck('roles.id');
+
+        // No roles configured for this phase
+        if ($roleIds->isEmpty()) {
+            return response()->json([
+                'users' => [],
+            ]);
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | Find users who:
+    |
+    | 1. Belong to the selected office
+    | 2. Have at least one role authorized for this phase
+    |--------------------------------------------------------------------------
+    */
+
+        $users = User::query()
+            ->whereHas('offices', function ($query) use ($office) {
+                $query->where('offices.id', $office->id);
+            })
+            ->whereHas('roles', function ($query) use ($roleIds) {
+                $query->whereIn('roles.id', $roleIds);
+            })
+            ->with([
+                'roles' => function ($query) use ($roleIds) {
+                    $query
+                        ->whereIn('roles.id', $roleIds)
+                        ->select([
+                            'roles.id',
+                            'roles.name',
+                        ]);
+                },
+            ])
+            ->orderBy('name')
+            ->get([
+                'users.id',
+                'users.name',
+            ]);
+
+        /*
+    |--------------------------------------------------------------------------
+    | Return only matching phase roles
+    |--------------------------------------------------------------------------
+    */
+
+        return response()->json([
+            'users' => $users->map(function ($user) {
+                return [
+                    'id'   => $user->id,
+                    'name' => $user->name,
+
+                    // Only roles authorized for the selected phase
+                    'role' => $user->roles
+                        ->pluck('name')
+                        ->implode(', '),
+                ];
+            })->values(),
+        ]);
     }
 }

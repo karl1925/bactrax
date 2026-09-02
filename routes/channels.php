@@ -1,14 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Broadcast;
+use App\Models\{User};
 
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+Broadcast::channel('user.{userId}', function (User $user, int $userId) {
+    return true;
 });
 
-use App\Models\User;
-
 Broadcast::channel('office.{officeId}', function (User $user, int $officeId) {
-    return $user->offices->pluck('id')->contains($officeId)
-        || $user->roles()->whereIn('name', ['admin', 'bac_secretariat', 'hope'])->exists();
+    return true;
 });

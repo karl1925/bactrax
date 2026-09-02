@@ -5,6 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="role-id" content="{{ Auth::user()->roles()->first()->id }}">
+    <meta name="office-id" content="{{ Auth::user()->offices()->first()->id }}">
+    <meta name="user-id" content="{{ Auth::user()->id }}">
 
     <title>@yield('title', config('app.name', 'BACTrax')) - DICT R2</title>
 
@@ -215,317 +218,14 @@
     </div>
 </div>
 
-{{-- ROUTE MODAL --}}
-<div id="routeModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-        <div id="routeOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"></div>
-        
-        <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-2xl transition-all sm:my-8 border border-slate-200 dark:border-slate-800">
-            <form id="routeForm" method="POST" action="">
-                @csrf
-                
-                <div class="border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-paper-plane text-indigo-600 dark:text-indigo-400"></i> Route Procurement
-                    </h3>
-                    <button type="button" class="closeRouteModal text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
-                </div>
-
-                <div class="p-6 space-y-4">
-                    <!-- Project & Target Phase Summary -->
-                    <div class="p-3 bg-indigo-50/60 dark:bg-slate-800/60 rounded-xl border border-indigo-100 dark:border-slate-700/80 space-y-1">
-                        <p class="text-xs text-slate-500 dark:text-slate-400">
-                            Routing Project: <span id="routeProcurementTitle" class="font-bold text-slate-800 dark:text-slate-100"></span>
-                        </p>
-                        <p id="routeNextPhaseContainer" class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hidden">
-                            Target Phase Step: <span id="routeNextPhaseName" class="font-bold"></span>
-                        </p>
-                    </div>
-
-                    <!-- Destination Office (Filtered specifically for Next Phase Actors) -->
-                    <div>
-                        <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                            Destination Office <span class="text-rose-500">*</span>
-                        </label>
-                        <select name="to_office_id" required class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-600 dark:focus:border-indigo-400">
-                            <option value="">Select Destination Office</option>
-                            @if(isset($nextPhaseTargetOffices) && $nextPhaseTargetOffices->count() > 0)
-                                @foreach($nextPhaseTargetOffices as $office)
-                                    <option value="{{ $office->id }}" {{ $nextPhaseTargetOffices->count() === 1 ? 'selected' : '' }}>
-                                        {{ $office->name }} ({{ $office->code }}) — {{ $office->location_type }}
-                                    </option>
-                                @endforeach
-                            @else
-                                @foreach(\App\Models\Office::where('is_active', true)->get() as $office)
-                                    <option value="{{ $office->id }}">{{ $office->name }} ({{ $office->code }})</option>
-                                @endforeach
-                            @endif
-                        </select>
-                        <p class="text-[10px] text-slate-400 mt-1">Filtered specifically for offices with users authorized to act on the next phase.</p>
-                    </div>
-
-                    <!-- Assign To Specific Actor (Targeted for Next Phase) -->
-                    <div>
-                        <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                            Assign To Specific Actor (Optional)
-                        </label>
-                        <select name="to_user_id" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-600 dark:focus:border-indigo-400">
-                            <option value="">Any authorized actor in destination office (Default)</option>
-                            @if(isset($nextPhaseTargetUsers) && $nextPhaseTargetUsers->count() > 0)
-                                @foreach($nextPhaseTargetUsers as $user)
-                                    <option value="{{ $user->id }}">
-                                        {{ $user->name }} — {{ $user->roles->first()->name ?? 'Actor' }} ({{ $user->offices->first()->code ?? 'N/A' }})
-                                    </option>
-                                @endforeach
-                            @else
-                                @foreach(\App\Models\User::all() as $u)
-                                    <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->offices->first()->code ?? 'N/A' }})</option>
-                                @endforeach
-                            @endif
-                        </select>
-                        <p class="text-[10px] text-slate-400 mt-1">Filtered to display only users with authorized roles for the next phase.</p>
-                    </div>
-
-                    <!-- Remarks Field -->
-                    <div>
-                        <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                            Remarks / Instructions
-                        </label>
-                        <textarea name="remarks" rows="3" placeholder="Add optional routing instructions..." class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-600 dark:focus:border-indigo-400"></textarea>
-                    </div>
-                </div>
-
-                <div class="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 px-6 py-3 flex items-center justify-end gap-2">
-                    <button type="button" class="closeRouteModal rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition shadow-xs">Cancel</button>
-                    <button type="submit" class="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-semibold transition shadow-xs">Submit Routing</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<div id="toastContainer"
+     class="fixed top-5 right-5 z-[100] space-y-3 w-full max-w-sm pointer-events-none">
 </div>
 
-{{-- RETURN MODAL --}}
-<div id="returnModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-        <div id="returnOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"></div>
-        
-        <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-2xl transition-all sm:my-8 border border-slate-200 dark:border-slate-800">
-            <form id="returnForm" method="POST" action="">
-                @csrf
-                
-                <!-- Modal Header -->
-                <div class="border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400 flex items-center gap-2">
-                        <i class="fa-solid fa-rotate-left text-rose-600"></i> Return Procurement
-                    </h3>
-                    <button type="button" class="closeReturnModal text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
-                </div>
-
-                <!-- Modal Body -->
-                <div class="p-6 space-y-4">
-                    <p class="text-xs text-slate-500 dark:text-slate-400">
-                        Returning project: <span id="returnProcurementTitle" class="font-bold text-slate-800 dark:text-slate-100"></span>
-                    </p>
-
-                    <!-- Target Phase (Filtered strictly for phases prior to current phase) -->
-                    <div>
-                        <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                            Target Return Phase <span class="text-rose-500">*</span>
-                        </label>
-                        <select id="target_phase_select" name="target_phase_id" required class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-rose-500">
-                            <option value="">Select Target Return Phase</option>
-                            @if(isset($procurement) && $procurement->currentPhase)
-                                @php
-                                    $priorPhases = $procurement->mode->phases
-                                        ->where('phase_sequence', '<', $procurement->currentPhase->phase_sequence)
-                                        ->sortBy('phase_sequence');
-                                @endphp
-                                @foreach($priorPhases as $phase)
-                                    <option value="{{ $phase->id }}">
-                                        Step {{ $phase->phase_sequence }}: {{ $phase->phase_name }}
-                                    </option>
-                                @endforeach
-                            @endif
-                        </select>
-                        <p class="text-[10px] text-slate-400 mt-1">Displays only phase steps preceding the project's active stage.</p>
-                    </div>
-
-                    <!-- Remarks / Reason Field -->
-                    <div>
-                        <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                            Reason for Returning <span class="text-rose-500">*</span>
-                        </label>
-                        <textarea name="remarks" required rows="4" placeholder="Specify missing documents or technical corrections required..." class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-rose-500"></textarea>
-                    </div>
-                </div>
-
-                <!-- Modal Footer Controls -->
-                <div class="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 px-6 py-3 flex items-center justify-end gap-2">
-                    <button type="button" class="closeReturnModal rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition shadow-xs">Cancel</button>
-                    <button type="submit" class="rounded-lg bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 text-xs font-semibold transition shadow-xs">Confirm Return</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-{{-- APPROVE / COMPLETE MODAL --}}
-<div id="approveModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-        <div id="approveOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"></div>
-        
-        <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-2xl transition-all sm:my-8 border border-slate-200 dark:border-slate-800">
-            <form id="approveForm" method="POST" action="">
-                @csrf
-                
-                <!-- Modal Header -->
-                <div class="border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
-                        <i class="fa-solid fa-circle-check text-emerald-600"></i> Final Approval & Completion
-                    </h3>
-                    <button type="button" class="closeApproveModal text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
-                </div>
-
-                <!-- Modal Body -->
-                <div class="p-6 space-y-4">
-                    <div class="p-3 bg-emerald-50/60 dark:bg-slate-800/60 rounded-xl border border-emerald-100 dark:border-slate-700/80 space-y-1">
-                        <p class="text-xs text-slate-500 dark:text-slate-400">
-                            Completing Project: <span id="approveProcurementTitle" class="font-bold text-slate-800 dark:text-slate-100"></span>
-                        </p>
-                        <p class="text-[11px] text-emerald-700 dark:text-emerald-400">
-                            This action will mark the procurement request as fully approved and completed across all phases.
-                        </p>
-                    </div>
-
-                    <!-- Optional Approval Remarks -->
-                    <div>
-                        <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                            Approval Remarks / Final Notes (Optional)
-                        </label>
-                        <textarea name="remarks" rows="3" placeholder="Add optional closing notes or reference numbers..." class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-emerald-500"></textarea>
-                    </div>
-                </div>
-
-                <!-- Modal Footer Controls -->
-                <div class="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 px-6 py-3 flex items-center justify-end gap-2">
-                    <button type="button" class="closeApproveModal rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition shadow-xs">Cancel</button>
-                    <button type="submit" class="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-semibold transition shadow-xs">Confirm Approval</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-{{-- REJECT MODAL --}}
-<div id="rejectModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-        <div id="rejectOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"></div>
-        
-        <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-2xl transition-all sm:my-8 border border-slate-200 dark:border-slate-800">
-            <form id="rejectForm" method="POST" action="">
-                @csrf
-                
-                <!-- Modal Header -->
-                <div class="border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400 flex items-center gap-2">
-                        <i class="fa-solid fa-circle-xmark text-rose-600"></i> Reject Procurement
-                    </h3>
-                    <button type="button" class="closeRejectModal text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
-                </div>
-
-                <!-- Modal Body -->
-                <div class="p-6 space-y-4">
-                    <div class="p-3 bg-rose-50/60 dark:bg-slate-800/60 rounded-xl border border-rose-100 dark:border-slate-700/80 space-y-1">
-                        <p class="text-xs text-slate-500 dark:text-slate-400">
-                            Rejecting Project: <span id="rejectProcurementTitle" class="font-bold text-slate-800 dark:text-slate-100"></span>
-                        </p>
-                        <p class="text-[11px] text-rose-700 dark:text-rose-400">
-                            Warning: Rejecting this procurement will terminate the request workflow immediately.
-                        </p>
-                    </div>
-
-                    <!-- Rejection Reason -->
-                    <div>
-                        <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                            Reason for Rejection <span class="text-rose-500">*</span>
-                        </label>
-                        <textarea name="remarks" required rows="4" placeholder="Specify the non-compliance or budget issues requiring rejection..." class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-rose-500"></textarea>
-                    </div>
-                </div>
-
-                <!-- Modal Footer Controls -->
-                <div class="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 px-6 py-3 flex items-center justify-end gap-2">
-                    <button type="button" class="closeRejectModal rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition shadow-xs">Cancel</button>
-                    <button type="submit" class="rounded-lg bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 text-xs font-semibold transition shadow-xs">Confirm Rejection</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-{{-- CANCEL MODAL --}}
-<div id="cancelModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-        <div id="cancelOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"></div>
-        
-        <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-2xl transition-all sm:my-8 border border-slate-200 dark:border-slate-800">
-            <form id="cancelForm" method="POST" action="">
-                @csrf
-                
-                <!-- Modal Header -->
-                <div class="border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-2">
-                        <i class="fa-solid fa-ban text-amber-600"></i> Cancel Procurement Request
-                    </h3>
-                    <button type="button" class="closeCancelModal text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
-                </div>
-
-                <!-- Modal Body -->
-                <div class="p-6 space-y-4">
-                    <div class="p-3 bg-amber-50/60 dark:bg-slate-800/60 rounded-xl border border-amber-100 dark:border-slate-700/80 space-y-1">
-                        <p class="text-xs text-slate-500 dark:text-slate-400">
-                            Cancelling Request: <span id="cancelProcurementTitle" class="font-bold text-slate-800 dark:text-slate-100"></span>
-                        </p>
-                        <p class="text-[11px] text-amber-700 dark:text-amber-400">
-                            This will void the active procurement request. It can no longer be routed or modified.
-                        </p>
-                    </div>
-
-                    <!-- Reason for Cancellation -->
-                    <div>
-                        <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                            Reason for Cancellation <span class="text-rose-500">*</span>
-                        </label>
-                        <textarea name="remarks" required rows="4" placeholder="Provide justification for cancelling this request..." class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-amber-500"></textarea>
-                    </div>
-                </div>
-
-                <!-- Modal Footer Controls -->
-                <div class="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 px-6 py-3 flex items-center justify-end gap-2">
-                    <button type="button" class="closeCancelModal rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition shadow-xs">Dismiss</button>
-                    <button type="submit" class="rounded-lg bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 text-xs font-semibold transition shadow-xs">Confirm Cancellation</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
+@stack('modals')
 
 <script>
     $(document).ready(function () {
-        // ==========================================
-        // 1. SEARCH MODAL & LIVE AJAX SEARCH
-        // ==========================================
         const $searchModal = $('#searchModal');
         const $searchInput = $('#searchInput');
         const $clearBtn = $('#clearSearchBtn');
@@ -536,16 +236,13 @@
                 $searchInput.focus();
             });
         };
-
         window.closeSearchModal = function () {
             $searchModal.fadeOut(150);
         };
-
         let debounceTimer;
         $searchInput.on('input', function () {
             clearTimeout(debounceTimer);
             let query = $(this).val().trim();
-
             if (query.length > 0) {
                 $clearBtn.removeClass('hidden');
             } else {
@@ -553,32 +250,61 @@
                 $liveResults.addClass('hidden').empty();
                 return;
             }
-
             if (query.length < 2) return;
-
-            debounceTimer = setTimeout(function() {
+            debounceTimer = setTimeout(function () {
                 $.ajax({
                     url: "{{ route('api.search.global') }}",
                     type: "GET",
-                    data: { q: query },
-                    success: function(data) {
+                    data: {
+                        q: query
+                    },
+                    success: function (data) {
                         let html = '';
                         if (data.length === 0) {
-                            html = '<p class="text-xs text-slate-400 p-4 text-center">No matching procurement records found.</p>';
+                            html = `
+                                <p class="text-xs text-slate-400 p-4 text-center">
+                                    No matching procurement records found.
+                                </p>
+                            `;
                         } else {
-                            data.forEach(function(item) {
+                            data.forEach(function (item) {
                                 html += `
-                                    <a href="${item.url}" class="block p-3 hover:bg-indigo-50/80 dark:hover:bg-slate-800 rounded-xl transition">
+                                    <a href="${item.url}"
+                                    class="block p-3 hover:bg-indigo-50/80
+                                            dark:hover:bg-slate-800 rounded-xl transition">
                                         <div class="flex justify-between items-center mb-1">
-                                            <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">${item.tracking_number}</span>
-                                            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">${item.office}</span>
+                                            <span class="font-mono text-xs font-bold
+                                                        text-indigo-600 dark:text-indigo-400">
+                                                ${item.tracking_number}
+                                            </span>
+                                            <span class="text-[10px] font-semibold px-2 py-0.5
+                                                        rounded-full bg-slate-100 dark:bg-slate-800
+                                                        text-slate-600 dark:text-slate-300
+                                                        border border-slate-200 dark:border-slate-700">
+                                                ${item.office}
+                                            </span>
                                         </div>
-                                        <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">${item.title}</p>
-                                        <div class="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                                            <span>ABC: <strong class="text-slate-700 dark:text-slate-300 font-mono">${item.abc}</strong></span>
-                                            <span class="font-bold text-indigo-600 dark:text-indigo-400">${item.status}</span>
+                                        <p class="text-xs font-semibold text-slate-800
+                                                dark:text-slate-200 truncate">
+                                            ${item.title}
+                                        </p>
+                                        <div class="flex justify-between text-[11px]
+                                                    text-slate-500 dark:text-slate-400 mt-1">
+                                            <span>
+                                                ABC:
+                                                <strong class="text-slate-700
+                                                            dark:text-slate-300 font-mono">
+                                                    ${item.abc}
+                                                </strong>
+                                            </span>
+
+                                            <span class="font-bold text-indigo-600
+                                                        dark:text-indigo-400">
+                                                ${item.status}
+                                            </span>
                                         </div>
-                                    </a>`;
+                                    </a>
+                                `;
                             });
                         }
                         $liveResults.html(html).removeClass('hidden');
@@ -586,146 +312,184 @@
                 });
             }, 300);
         });
-
         $clearBtn.on('click', function () {
             $searchInput.val('').focus();
-            $liveResults.addClass('hidden').empty();
+            $liveResults
+                .addClass('hidden')
+                .empty();
             $(this).addClass('hidden');
         });
-
         $('.quick-search-btn').on('click', function () {
             const query = $(this).data('search');
-            $searchInput.val(query).trigger('input').focus();
+            $searchInput
+                .val(query)
+                .trigger('input')
+                .focus();
         });
-
         $('#searchOverlay, #documentPreviewBackdrop').on('click', function () {
             window.closeSearchModal();
         });
-
-        // ==========================================
-        // 2. PROCUREMENT ACTION MODAL HANDLERS
-        // ==========================================
-
-        // --- Dynamic Route Modal ---
-        window.openRouteModal = function(actionUrl, procurementTitle, nextPhaseName = null) {
-            $('#routeForm').attr('action', actionUrl);
-            $('#routeForm')[0].reset();
-            $('#routeProcurementTitle').text(procurementTitle);
-
-            if (nextPhaseName) {
-                $('#routeNextPhaseName').text(nextPhaseName);
-                $('#routeNextPhaseContainer').removeClass('hidden');
-            } else {
-                $('#routeNextPhaseContainer').addClass('hidden');
-            }
-
-            $('#routeModal').removeClass('hidden');
-        };
-
-        $('.closeRouteModal, #routeOverlay').on('click', function() {
-            $('#routeModal').addClass('hidden');
-        });
-
-        // --- Dynamic Return Modal ---
-        window.openReturnModal = function(actionUrl, procurementTitle, priorPhases = []) {
-            $('#returnForm').attr('action', actionUrl);
-            $('#returnForm')[0].reset();
-            $('#returnProcurementTitle').text(procurementTitle);
-
-            if (typeof priorPhases === 'string') {
-                try {
-                    priorPhases = JSON.parse(priorPhases);
-                } catch (e) {
-                    priorPhases = [];
-                }
-            }
-
-            if (Array.isArray(priorPhases) && priorPhases.length > 0) {
-                let optionsHtml = '<option value="">Select Target Return Phase</option>';
-                priorPhases.forEach(function(phase) {
-                    optionsHtml += `<option value="${phase.id}">Step ${phase.phase_sequence}: ${phase.phase_name}</option>`;
-                });
-                $('#target_phase_select').html(optionsHtml);
-                
-                // Auto-select the immediately preceding phase step
-                $('#target_phase_select').val(priorPhases[priorPhases.length - 1].id);
-            } else {
-                $('#target_phase_select').html('<option value="">No previous phases available</option>');
-            }
-
-            $('#returnModal').removeClass('hidden');
-        };
-
-        $('.closeReturnModal, #returnOverlay').on('click', function() {
-            $('#returnModal').addClass('hidden');
-        });
-
-        // --- Dynamic Approve / Complete Modal ---
-        window.openApproveModal = function(actionUrl, procurementTitle) {
-            $('#approveForm').attr('action', actionUrl);
-            $('#approveForm')[0].reset();
-            $('#approveProcurementTitle').text(procurementTitle);
-            $('#approveModal').removeClass('hidden');
-        };
-
-        $('.closeApproveModal, #approveOverlay').on('click', function() {
-            $('#approveModal').addClass('hidden');
-        });
-
-        // --- Dynamic Reject Modal ---
-        window.openRejectModal = function(actionUrl, procurementTitle) {
-            $('#rejectForm').attr('action', actionUrl);
-            $('#rejectForm')[0].reset();
-            $('#rejectProcurementTitle').text(procurementTitle);
-            $('#rejectModal').removeClass('hidden');
-        };
-
-        $('.closeRejectModal, #rejectOverlay').on('click', function() {
-            $('#rejectModal').addClass('hidden');
-        });
-
-        // --- Dynamic Cancel Modal ---
-        window.openCancelModal = function(actionUrl, procurementTitle) {
-            $('#cancelForm').attr('action', actionUrl);
-            $('#cancelForm')[0].reset();
-            $('#cancelProcurementTitle').text(procurementTitle);
-            $('#cancelModal').removeClass('hidden');
-        };
-
-        $('.closeCancelModal, #cancelOverlay').on('click', function() {
-            $('#cancelModal').addClass('hidden');
-        });
-
-        // ==========================================
-        // 3. GLOBAL KEYBOARD SHORTCUTS
-        // ==========================================
-        $(document).on('keydown', function(e) {
-            // Cmd + K (Mac) or Ctrl + K (Windows/Linux) to open Search
-            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        $(document).on('keydown', function (e) {
+            if (
+                (e.metaKey || e.ctrlKey) &&
+                e.key.toLowerCase() === 'k'
+            ) {
                 e.preventDefault();
                 window.openSearchModal();
             }
-
-            // Close ANY open modal on Escape key press
             if (e.key === 'Escape') {
-                if ($searchModal.is(':visible')) window.closeSearchModal();
-                $('#routeModal, #returnModal, #approveModal, #rejectModal, #cancelModal').addClass('hidden');
+                if ($searchModal.is(':visible')) {
+                    window.closeSearchModal();
+                }
+                $(
+                    '#routeModal, #returnModal, #approveModal, ' +
+                    '#rejectModal, #cancelModal'
+                ).addClass('hidden');
             }
         });
-    });
+        function showToast(title, message, type = 'success', url = null) {
+            const icons = {
+                success: 'fa-circle-check',
+                error: 'fa-circle-exclamation',
+                warning: 'fa-triangle-exclamation',
+                info: 'fa-circle-info'
+            };
+            const classes = {
+                success: 'border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400',
+                error: 'border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400',
+                warning: 'border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400',
+                info: 'border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400'
+            };
+            const urlLink = url
+                ? `
+                    <a href="${url}"
+                    class="inline-flex items-center gap-1 mt-2
+                            text-[10px] font-bold
+                            text-indigo-600 dark:text-indigo-400
+                            hover:text-indigo-700 dark:hover:text-indigo-300
+                            hover:underline">
+                        View Procurement
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                    </a>
+                `
+                : '';
 
-@auth
-    $(document).ready(function() {
-        let primaryOfficeId = "{{ Auth::user()->offices->first()->id ?? 1 }}";
+           const $toast = $(`
+                <div class="toast pointer-events-auto
+                            rounded-xl border bg-white dark:bg-slate-900
+                            shadow-xl px-4 py-3
+                            translate-x-full opacity-0
+                            transition-all duration-300
+                            ${classes[type] || classes.info}">
 
-        if (window.Echo) {
-            window.Echo.private(`office.${primaryOfficeId}`)
-                .listen('.procurement.routed', (e) => {
-                    alert(`[Inbound Routing Alert] Procurement ${e.procurement.tracking_number} has been routed to your office!\n\nMessage: ${e.message}`);
-                });
+                    <!-- Header -->
+                    <div class="flex items-center gap-3">
+
+                        <!-- Icon -->
+                        <i class="fa-solid ${icons[type] || icons.info}
+                                shrink-0 text-base"></i>
+
+                        <!-- Title -->
+                        <p class="flex-1 min-w-0 text-xs font-bold
+                                text-slate-800 dark:text-slate-100">
+                            ${title || 'Notification'}
+                        </p>
+
+                        <!-- Close -->
+                        <button type="button"
+                                class="toast-close shrink-0
+                                    text-slate-400
+                                    hover:text-slate-600
+                                    dark:hover:text-slate-200
+                                    transition">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+
+                    </div>
+
+                    <!-- Content -->
+                    <div class="pl-7 mt-1">
+
+                        <!-- Message -->
+                        <p class="text-xs font-medium
+                                text-slate-600 dark:text-slate-300">
+                            ${message}
+                        </p>
+
+                        <!-- URL -->
+                        ${urlLink}
+
+                    </div>
+
+                </div>
+            `);
+            $('#toastContainer').append($toast);
+            // Animate in
+            requestAnimationFrame(() => {
+                $toast.removeClass('translate-x-full opacity-0');
+            });
+            function removeToast() {
+                $toast.addClass('translate-x-full opacity-0');
+                setTimeout(() => {
+                    $toast.remove();
+                }, 300);
+            }
+            $toast.find('.toast-close').on('click', removeToast);
+            // Auto close
+            setTimeout(removeToast, 6000);
         }
+
+        const userId = $('meta[name="user-id"]').attr('content');
+        const officeId = $('meta[name="office-id"]').attr('content');
+
+        function handleProcurementUpdate(event, context = 'office') {
+            let title = 'Procurement Update';
+            let toastType = 'info';
+            switch (event.action) {
+                case 'ROUTED':
+                    title = context === 'user'
+                        ? 'Procurement Assigned to You'
+                        : 'Procurement Routed to Office';
+                    break;
+                case 'RETURNED':
+                    title = 'Procurement Returned';
+                    toastType = 'warning';
+                    break;
+                case 'COMPLETED':
+                    title = 'Procurement Completed';
+                    toastType = 'success';
+                    break;
+                case 'CANCELLED':
+                    title = 'Procurement Cancelled';
+                    toastType = 'error';
+                    break;
+                case 'REJECTED':
+                    title = 'Procurement Rejected';
+                    toastType = 'error';
+                    break;
+                default:
+                    title = 'Procurement Update';
+            }
+            const message = event.message ||
+                `Procurement #${event.procurement_id} has been updated.`;
+            showToast(
+                title,
+                message,
+                toastType,
+                event.url
+            );
+        }
+        
+        Echo.private(`office.${officeId}`)
+            .listen('.procurement.office_updated', (event) => {
+            handleProcurementUpdate(event, 'office');
+
+        });
+        Echo.private(`user.${userId}`)
+            .listen('.procurement.user_updated', (event) => {
+            handleProcurementUpdate(event, 'user');
+        });
     });
-@endauth
 </script>
 
 @stack('scripts')

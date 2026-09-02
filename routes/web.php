@@ -15,11 +15,13 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\OfficeController;
+use App\Http\Controllers\{ProfileController, ProfileSignatureController};
 use App\Http\Controllers\ReportController;
+use Illuminate\Support\Facades\Storage;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+
+Route::get('/', [AuthenticatedSessionController::class, 'create']);
+
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -28,8 +30,50 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
-
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+    // Route::get('/profile/{tab}', [ProfileController::class, 'edit'])->name('profile.edit');
+    // Route::put('/profile/{tab}', [ProfileController::class, 'update'])->name('profile.update');
+    // Route::put('/profile/password/update/{tab}', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    // Route::post('/profile/signature/{tab}', [ProfileSignatureController::class, 'store',])->name('profile.signature.store');
+    // Route::get('/profile/signature/download/{tab}', [ProfileSignatureController::class, 'download',])->name('profile.signature.download');
+    // Route::put('/profile/signature/{tab}', [ProfileSignatureController::class, 'replace',])->name('profile.signature.replace');
+    // Route::put('/profile/signature/password/{tab}', [ProfileSignatureController::class, 'updatePassword',])->name('profile.signature.password');
+    // Route::delete('/profile/signature/delete-password/{tab}', [ProfileSignatureController::class, 'destroy',])->name('profile.signature.deletepassword');
+
+    // Route::get(
+    //     '/profile/signature/download/{tab}',
+    //     [ProfileSignatureController::class, 'download']
+    // )->name('profile.signature.download');
+
+    // Route::get(
+    //     '/profile/signature/image/{tab}',
+    //     [ProfileSignatureController::class, 'image']
+    // )->name('profile.signature.image');
+
+    // Route::put(
+    //     '/profile/signature/{tab}',
+    //     [ProfileSignatureController::class, 'replace']
+    // )->name('profile.signature.replace');
+
+    // Route::put(
+    //     '/profile/signature/password/{tab}',
+    //     [ProfileSignatureController::class, 'updatePassword']
+    // )->name('profile.signature.password');
+
+    // Route::delete(
+    //     '/profile/signature/password/{tab}',
+    //     [ProfileSignatureController::class, 'deletePassword']
+    // )->name('profile.signature.deletepassword');
+
+    // Route::put(
+    //     '/profile/signature/appearance/{tab}',
+    //     [ProfileSignatureController::class, 'updateAppearance']
+    // )->name('profile.signature.appearance');
+
+
+
+
 
     // Procurement Operations Routes
     Route::get('/procurements', [ProcurementController::class, 'index'])->name('procurements.index');
@@ -84,6 +128,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/search/global', GlobalSearchController::class)
         ->name('api.search.global');
 
+    Route::get(
+        '/return-targets/{phase}',
+        [ProcurementController::class, 'returnTargetOffices']
+    )->name('return-targets');
+
+    Route::get(
+        '/return-target-users/{phase}/{office}',
+        [ProcurementController::class, 'returnTargetUsers']
+    )->name('return-target-users');
+
     // Procurement Modes Directory & Workflow Builder (Protected by 'permission:modes.manage')
     Route::middleware(['permission:modes.view'])->group(function () {
         Route::get('/procurement-modes', [ProcurementModeController::class, 'index'])->name('procurement-modes.index');
@@ -128,4 +182,50 @@ Route::middleware('auth')->group(function () {
 
     // Statutory Reports
     Route::get('/reports/gppb-compliance', [ReportController::class, 'gppbCompliance'])->name('reports.gppb-compliance')->middleware(['permission:reports.view']);
+});
+
+Route::middleware(['auth'])->prefix('user')->name('user.')->group(function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Profile
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/profile', [ProfileController::class, 'edit'])
+        ->name('profile.edit');
+
+    Route::put('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
+
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])
+        ->name('profile.password.update');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Signature
+    |--------------------------------------------------------------------------
+    */
+
+    Route::prefix('/signature')->name('signature.')->group(function () {
+        // Management UI & Certificate Routes
+        Route::get('/', [ProfileSignatureController::class, 'edit'])->name('edit');
+        Route::post('/', [ProfileSignatureController::class, 'store'])->name('store');
+        Route::put('/replace', [ProfileSignatureController::class, 'replace'])->name('replace');
+        Route::put('/password/update', [ProfileSignatureController::class, 'updatePassword'])->name('password.update');
+        Route::delete('/password/delete', [ProfileSignatureController::class, 'deletePassword'])->name('password.delete');
+        Route::put('/appearance', [ProfileSignatureController::class, 'updateAppearance'])->name('appearance.update');
+        Route::get('/image', [ProfileSignatureController::class, 'image'])->name('image');
+        Route::get('/download', [ProfileSignatureController::class, 'downloadCertificate'])->name('download');
+
+        // Document Preparation & Signing Actions
+        Route::post('/set-fields', [ProfileSignatureController::class, 'setFields'])->name('set-fields');
+        Route::get('/prepared', [ProfileSignatureController::class, 'getPreparedPdf'])->name('prepared');
+        Route::delete('/prepared', [ProfileSignatureController::class, 'deletePreparedFile'])->name('prepared.delete');
+        Route::post('/sign', [ProfileSignatureController::class, 'signDocument'])->name('sign');
+
+        // Signed Document Download
+        Route::get('/signed/download', [ProfileSignatureController::class, 'downloadSigned'])->name('signed.download');
+    });
 });

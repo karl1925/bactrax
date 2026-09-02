@@ -37,10 +37,10 @@ class ProcurementRouteController extends Controller
                 $procurement,
                 $request->user(),
                 (int) $request->input('to_office_id'),
-                $request->input('remarks'),
                 isset($validated['to_user_id'])
                     ? (int) $validated['to_user_id']
-                    : null
+                    : null,
+                $request->input('remarks'),
             );
 
             return back()->with('success', "Procurement {$procurement->tracking_number} routed successfully.");
@@ -56,6 +56,8 @@ class ProcurementRouteController extends Controller
 
         $request->validate([
             'target_phase_id' => ['required', 'exists:procurement_mode_phases,id'],
+            'to_office_id' => ['required', 'exists:offices,id'],
+            'to_user_id' => ['nullable', 'exists:users,id',],
             'remarks' => ['required', 'string', 'min:5'],
         ]);
 
@@ -63,8 +65,12 @@ class ProcurementRouteController extends Controller
             $this->workflowEngine->returnProcurement(
                 $procurement,
                 $request->user(),
-                (int) $request->input('target_phase_id'),
-                $request->input('remarks')
+                $request->target_phase_id,
+                (int) $request->input('to_office_id'),
+                isset($validated['to_user_id'])
+                    ? (int) $validated['to_user_id']
+                    : null,
+                $request->input('remarks'),
             );
 
             return back()->with('success', "Procurement {$procurement->tracking_number} returned for revision.");

@@ -65,7 +65,7 @@ class ProcurementPolicy
             return false;
         }
 
-        return $this->canPerformAction($user, $procurement, 'can_route');
+        return $user->canActOnProcurement($procurement);
     }
 
     public function return(User $user, Procurement $procurement): bool
@@ -126,12 +126,12 @@ class ProcurementPolicy
 
     protected function canPerformAction(User $user, Procurement $procurement, string $privilegeCode): bool
     {
-        if ($user->isAdmin()) {
-            return true;
-        }
-
         if (!$user->hasPrivilege($privilegeCode)) {
             return false;
+        }
+
+        if ($user->isAdmin()) {
+            return true;
         }
 
         return $user->canActOnPhase($procurement->currentPhase);

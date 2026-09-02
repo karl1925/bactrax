@@ -7,13 +7,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\UserSignature;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
     protected $fillable = ['name', 'email', 'password'];
-
     protected $hidden = ['password', 'remember_token'];
 
     public function roles(): BelongsToMany
@@ -135,12 +136,12 @@ class User extends Authenticatable
             return true;
         }
 
-        // If Admin, allow access
-        if ($this->isAdmin()) {
-            return true;
-        }
-
         // Strictly check if the user holds one of the authorized phase roles
         return $this->roles()->whereIn('roles.id', $phaseRoleIds)->exists();
+    }
+
+    public function signature(): HasOne
+    {
+        return $this->hasOne(UserSignature::class);
     }
 }
