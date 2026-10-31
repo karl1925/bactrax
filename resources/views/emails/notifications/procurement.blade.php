@@ -4,6 +4,8 @@
     $heroPhase = data_get($detailRows->firstWhere('label', 'Phase'), 'value', '—');
     $heroSigningStep = data_get($detailRows->firstWhere('label', 'Signing Step'), 'value', '—');
     $heroProgress = data_get($detailRows->firstWhere('label', 'Overall Progress'), 'value', '—');
+    $logoImageUrl = $message->embed(public_path('email_templates/pr_status/images/d97350c2b7cf7c78bc5e2e3fae52c926.png'));
+    $heroImageUrl = $message->embed(public_path('email_templates/pr_status/images/2017a87c39be163d52b9b9c40f238a0a.jpg'));
 @endphp
 <!doctype html>
 <html lang="en">

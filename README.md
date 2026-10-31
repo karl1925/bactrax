@@ -65,7 +65,7 @@ after changing `VITE_REVERB_*` values. In production, use the public WebSocket h
 and TLS settings that browsers can reach. Configure `MAIL_*` for email delivery;
 the example environment logs mail locally.
 
-Set `APP_URL` to the public HTTPS origin in the production server environment before running `php artisan config:cache`. The shared procurement email template loads its logo and banner from `/email_templates/pr_status/images/` under that origin, so a localhost `APP_URL` will produce image links that recipients cannot reach.
+Set `APP_URL` to the public HTTPS origin in the production server environment before running `php artisan config:cache`. Procurement email links use this origin when they are generated outside a web request. The email logo and banner are embedded inline, so recipients do not need to fetch those images from a localhost or public URL.
 
 ## Contributing
 

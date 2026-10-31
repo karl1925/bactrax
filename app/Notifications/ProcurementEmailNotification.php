@@ -62,8 +62,6 @@ class ProcurementEmailNotification extends Notification
             'actionLabel' => $this->actionLabel,
             'appUrl' => config('app.url'),
             'details' => $this->details,
-            'logoImageUrl' => rtrim((string) config('app.url'), '/').'/email_templates/pr_status/images/d97350c2b7cf7c78bc5e2e3fae52c926.png',
-            'heroImageUrl' => rtrim((string) config('app.url'), '/').'/email_templates/pr_status/images/2017a87c39be163d52b9b9c40f238a0a.jpg',
         ];
 
         return (new MailMessage())
