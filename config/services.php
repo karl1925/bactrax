@@ -2,18 +2,6 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Third Party Services
-    |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Resend, Postmark, AWS, and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
-    */
-
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
@@ -34,7 +22,11 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-    'pdf_signer' => [
-        'url' => env('PDF_SIGNER_URL', 'http://127.0.0.1:8002'),
+
+    'digisign' => [
+        'url'     => env('DIGISIGN_URL', 'https://digisign.dictr2.cloud'),
+        'token'   => env('DIGISIGN_TOKEN'),
+        'timeout' => env('DIGISIGN_TIMEOUT', 60),
     ],
+
 ];

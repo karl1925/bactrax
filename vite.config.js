@@ -8,7 +8,10 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
+                'resources/css/editor.css',
                 'resources/js/app.js',
+                'resources/js/editor.js',
+                'resources/js/procurement-builder.js'
             ],
             refresh: true,
 
@@ -20,6 +23,7 @@ export default defineConfig({
         }),
 
         tailwindcss(),
+
     ],
 
     server: {

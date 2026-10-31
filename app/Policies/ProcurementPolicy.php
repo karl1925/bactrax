@@ -2,25 +2,26 @@
 
 namespace App\Policies;
 
-use App\Models\Procurement;
+use App\Models\Procurement\Procurement;
 use App\Models\User;
 
 class ProcurementPolicy
 {
     public function view(User $user, Procurement $procurement): bool
     {
+        if ($user->isAdmin()) {
+            return true;
+        }
         if ($user->isCentralRole()) {
             return true;
         }
-
         $userOfficeIds = $user->offices->pluck('id')->toArray();
 
         if (in_array($procurement->end_user_office_id, $userOfficeIds)) {
             return true;
         }
 
-        $activeRoute = $procurement->latestRoute;
-        if ($activeRoute && in_array($activeRoute->to_office_id, $userOfficeIds)) {
+        if ($procurement->mode?->phases?->contains(fn ($phase) => $user->canActOnPhase($phase))) {
             return true;
         }
 

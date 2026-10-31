@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Procurement;
+use App\Models\Procurement\Procurement;
 use Carbon\Carbon;
 
 class GppbExportService
@@ -12,18 +12,17 @@ class GppbExportService
      */
     public function generateAnnualRegister(int $year): array
     {
-        $procurements = Procurement::with(['endUserOffice', 'mode', 'items', 'routes'])
+        $procurements = Procurement::with(['endUserOffice', 'mode', 'items', 'history'])
             ->whereYear('created_at', $year)
             ->get();
 
         return $procurements->map(function ($p) {
-            $firstRoute = $p->routes->sortBy('created_at')->first();
-            $lastRoute = $p->routes->sortByDesc('created_at')->first();
+            $lastEvent = $p->history->sortByDesc('created_at')->first();
 
-            $totalLifecycleDays = $p->created_at->diffInDays($lastRoute?->created_at ?? Carbon::now());
+            $totalLifecycleDays = $p->created_at->diffInDays($lastEvent?->created_at ?? Carbon::now());
 
             return [
-                'tracking_number' => $p->tracking_number,
+                'pr_number' => $p->pr_number,
                 'project_title' => $p->title,
                 'end_user_office' => $p->endUserOffice->name ?? 'N/A',
                 'procurement_mode' => $p->mode->name ?? 'N/A',

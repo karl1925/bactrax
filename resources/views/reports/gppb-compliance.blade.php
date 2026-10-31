@@ -3,10 +3,11 @@
 @section('title', 'GPPB RA 12009 Compliance Report')
 
 @section('page-header')
+@include('partials.page-back-link', ['href' => route('dashboard'), 'label' => 'Dashboard'])
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
         <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <i class="fa-solid fa-file-contract text-indigo-600 dark:text-indigo-400"></i> GPPB RA 12009 Compliance Report
+            <i class="fa-solid fa-file-contract text-blue-600 dark:text-blue-400"></i> GPPB RA 12009 Compliance Report
         </h1>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Statutory procurement register and 60-day turnaround audit log</p>
     </div>
@@ -46,7 +47,7 @@
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                 @forelse($reportData as $row)
                 <tr>
-                    <td class="py-3 px-3 font-mono font-bold text-indigo-600 dark:text-indigo-400">{{ $row['tracking_number'] }}</td>
+                    <td class="py-3 px-3 font-mono font-bold text-blue-600 dark:text-blue-400">{{ $row['pr_number'] }}</td>
                     <td class="py-3 px-3 font-medium">{{ $row['project_title'] }}</td>
                     <td class="py-3 px-3">{{ $row['end_user_office'] }}</td>
                     <td class="py-3 px-3">{{ $row['procurement_mode'] }}</td>

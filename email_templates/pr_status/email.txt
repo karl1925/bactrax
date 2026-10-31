@@ -1,0 +1,8 @@
+Hello {{ recipient_name }},
+Your turn to sign {{ pr_number }} has arrived
+Open Link and Sign ➔
+Cheers, From DICT R2 Systems Development Team
+Procurement Made Easy
+BACTrax is a DICT R2 Procurement Routing System
+internally developed by its Systems Development Team
+If you're having trouble clicking the "Open and sign" button, copy and paste the URL below into your web browser: {{ procurement_url }}

@@ -11,9 +11,12 @@ class StoreModeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->roles()->whereHas('permissions', function ($q) {
-            $q->where('name', 'modes.manage');
-        })->exists();
+        $user = $this->user();
+        if (!$user) return false;
+        if ($user->isAdmin()) return true;
+
+        $permission = $this->isMethod('POST') ? 'modes.add' : 'modes.edit';
+        return $user->hasPermission($permission);
     }
 
     /**
@@ -41,16 +44,16 @@ class StoreModeRequest extends FormRequest
                 'required',
                 'numeric',
                 'min:0',
+                'max:9999999999999.99',
             ],
             'max_abc' => [
                 'nullable',
                 'numeric',
+                'min:0',
+                'max:9999999999999.99',
                 'gte:min_abc',
             ],
-            'description' => [
-                'nullable',
-                'string',
-            ],
+            'description' => ['nullable', 'string', 'max:10000'],
             'is_active' => [
                 'nullable',
                 'boolean',
@@ -64,7 +67,7 @@ class StoreModeRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'code' => strtoupper(trim($this->code)),
+            'code' => is_string($this->input('code')) ? strtoupper(trim($this->input('code'))) : $this->input('code'),
             'is_active' => $this->boolean('is_active'),
         ]);
     }

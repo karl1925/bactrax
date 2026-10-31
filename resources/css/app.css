@@ -112,6 +112,25 @@ body {
     @apply border-blue-500 ring-2 ring-blue-100 dark:ring-blue-900/30;
 }
 
+/* Keep native controls consistent across every page in the main app shell. */
+#mainPad input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="range"]):not([type="color"]),
+#mainPad select,
+#mainPad textarea {
+    border-color: var(--slate-300);
+    border-radius: 0.625rem;
+}
+
+.dark #mainPad input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="range"]):not([type="color"]),
+.dark #mainPad select,
+.dark #mainPad textarea {
+    border-color: var(--slate-700);
+}
+
+#mainPad input[type="checkbox"],
+#mainPad input[type="radio"] {
+    accent-color: var(--gov-blue);
+}
+
 
 /*
 |--------------------------------------------------------------------------
@@ -140,6 +159,24 @@ body {
 
 .btn-danger {
     @apply inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600;
+}
+
+/* Make interactive controls visibly clickable throughout the app shell. */
+a[href]:not([aria-disabled="true"]),
+button:not(:disabled),
+input[type="button"]:not(:disabled),
+input[type="submit"]:not(:disabled),
+input[type="reset"]:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+}
+
+button:disabled,
+input[type="button"]:disabled,
+input[type="submit"]:disabled,
+input[type="reset"]:disabled,
+[role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
 }
 
 
@@ -615,7 +652,7 @@ body {
 .modal-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 40;
+    z-index: 120;
     background: rgb(15 23 42 / 0.55);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);

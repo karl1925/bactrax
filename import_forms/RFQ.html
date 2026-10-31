@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Request for Quotation</title>
+</head>
+<body style="font-family:'Arial Narrow',Helvetica,sans-serif;font-size:12px;line-height:1.2;color:#111">
+<main class="rfq-document" data-template-code="RFQ" data-template-version="1" style="width:100%;color:#111;font-family:'Arial Narrow',Helvetica,sans-serif;font-size:12px;line-height:1.2">
+    <header style="margin:0 0 12px;text-align:center">
+        <section data-header data-title="REQUEST FOR QUOTATION"></section>
+    </header>
+
+    <table aria-label="Procurement and quotation details" style="width:100%;border-collapse:collapse;border-spacing:0;margin:15px 0;border-collapse:collapse;border-spacing:0">
+        <tbody>
+            <tr style="break-inside:avoid;page-break-inside:avoid">
+                <td style="width:30%;border:1px solid #111;padding:1px;vertical-align:middle;">Procurement Project Title / Purpose:</td>
+                <td colspan="3" style="border:1px solid #111;padding:1px;vertical-align:middle;"><strong data-print="procurement.purpose"></strong></td>
+            </tr>
+            <tr style="break-inside:avoid;page-break-inside:avoid">
+                <td style="width:30%;border:1px solid #111;padding:1px;vertical-align:middle;">Approved Budget for the Contract (ABC):</td>
+                <td style="width:25%;border:1px solid #111;padding:1px;vertical-align:middle;"><strong data-print="procurement.abc_amount" data-format="currency"></strong></td>
+                <td style="width:20%;border:1px solid #111;padding:1px;vertical-align:middle;">End User:</td>
+                <td style="width:25%;border:1px solid #111;padding:1px;vertical-align:middle;"><strong data-print="procurement.end_user_office.name"></strong></td>
+            </tr>
+            <tr style="break-inside:avoid;page-break-inside:avoid">
+                <td style="border:1px solid #111;padding:1px;vertical-align:middle;">Purchase Request No.:</td>
+                <td style="border:1px solid #111;padding:1px;vertical-align:middle;"><strong data-print="procurement.pr_number"></strong></td>
+                <td style="border:1px solid #111;padding:1px;vertical-align:middle;">Mode of Procurement:</td>
+                <td style="border:1px solid #111;padding:1px;vertical-align:middle;"><strong data-print="procurement.mode.name"></strong></td>
+            </tr>
+            <tr style="break-inside:avoid;page-break-inside:avoid">
+                <td style="border:1px solid #111;padding:1px;vertical-align:middle;">Request for Quotation No.:</td>
+                <td style="border:1px solid #111;padding:1px;vertical-align:middle;"><strong data-print="procurement.rfq_number"></strong></td>
+                <td data-target="#rfq-delivery-input" style="border:1px solid #111;padding:1px;vertical-align:middle;"><span name="is_delivery_cd" data-input="procurement.is_delivery_cd" data-input-type="select" data-value-type="boolean" data-options='[{&quot;value&quot;:&quot;true&quot;,&quot;label&quot;:&quot;Delivery Period (CD)&quot;},{&quot;value&quot;:&quot;false&quot;,&quot;label&quot;:&quot;Delivery Date&quot;}]' aria-label="Delivery schedule type"></span></td>
+                <td id="rfq-delivery-input" style="font-weight: bold; border:1px solid #111;padding:1px;vertical-align:middle;"><span data-target-value="true" data-show-if="procurement.is_delivery_cd"><span data-input="procurement.delivery_cd" data-input-type="number" data-min="1" data-step="1" data-unit="day(s)" data-default="7" data-required data-clear-if-not="procurement.is_delivery_cd" data-label="Delivery duration in calendar days"></span> Day(s)</span><span data-target-value="false" data-show-if-not="procurement.is_delivery_cd"><span data-input="procurement.delivery_date" data-input-type="date" data-format="date:dd-Mmm-yyyy" data-default-from="procurement.delivery_date" data-required data-clear-if="procurement.is_delivery_cd" data-label="Delivery date"></span></span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <section data-rfq-notice></section>
+
+    <p style="margin:14px 0 6px;font-weight:700;line-height:1.2">Submit your proposal along with the following documents:</p>
+    <table aria-label="Required supplier documents" style="width:100%;margin:15px 0;border-collapse:collapse;border-collapse:collapse;border-spacing:0">
+        <tbody data-each="rfq.required_documents" data-as="document" data-row-template>
+        <tr style="break-inside:avoid;page-break-inside:avoid"><td data-rfq-document-toggle role="button" tabindex="0" aria-label="Toggle required document" style="width:24px;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center;cursor:pointer"><span data-print="document.checked_mark"></span></td><td style="width:24px;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center" data-print="document.sequence"></td><td data-print="document.label" style="border:1px solid #111;padding:4px;vertical-align:middle;"></td></tr>
+        </tbody>
+    </table>
+
+    <table aria-label="BAC and canvasser signatories" style="width:100%;border-collapse:collapse;border-spacing:0;border:0;border-collapse:collapse;border-spacing:0">
+        <tbody>
+        <tr style="break-inside:avoid;page-break-inside:avoid">
+            <td style="width:10%;border:0;padding:1px;vertical-align:middle;text-align:center"></td>
+            <td style="width:30%;border:0;padding:1px;vertical-align:middle;text-align:center"><div style="border-bottom:1px solid #111">MAGDALENA D. GOMEZ</div></td>
+            <td style="width:20%;border:0;padding:1px;vertical-align:middle;text-align:center"></td>
+            <td style="width:30%;border:0;padding:4px;vertical-align:middle;text-align:center"><div style="border-bottom:1px solid #111"></div></td>
+            <td style="width:10%;border:0;padding:1px;"></td>
+        </tr>
+        <tr style="break-inside:avoid;page-break-inside:avoid">
+            <td style="border:0;padding:1px;vertical-align:middle;text-align:center"></td>
+            <td style="border:0;padding:1px;vertical-align:middle;text-align:center"><span style="padding-top:1px;text-align:center;font-size:11px;font-style:italic">BAC Chairperson</span></td>
+            <td style="border:0;padding:1px;vertical-align:middle;text-align:center"></td>
+            <td style="border:0;padding:4px;vertical-align:middle;text-align:center"><span style="padding-top:3px;text-align:center;font-size:11px;font-style:italic">Signature over printed name of canvasser</span></td>
+            <td style="border:0;padding:1px;vertical-align:middle;text-align:center"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <section data-rfq-instructions></section>
+
+    <p style="margin:14px 0 6px;font-weight:700;line-height:1.2">Sir/Madam:</p>
+    <p style="line-height:1.2">After having carefully read and accepted the Terms and Conditions in this Request for Quotation, I/We submit our quotation/s for the item/s as follows:</p>
+
+    <table aria-label="Quotation item table" style="width:100%;table-layout:fixed;border-collapse:collapse;border-spacing:0">
+        <colgroup>
+            <col style="width:5%">
+            <col style="width:7%">
+            <col style="width:6%">
+            <col style="width:15.5%">
+            <col style="width:15.5%">
+            <col style="width:8%">
+            <col style="width:4%">
+            <col style="width:4%">
+            <col style="width:14%">
+            <col style="width:10%">
+            <col style="width:11%">
+        </colgroup>
+        <thead style="display:table-header-group;white-space:normal;overflow-wrap:anywhere;word-break:normal">
+        <tr>
+            <th rowspan="2" style="width:5%;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center;font-weight:700;text-wrap:wrap">Item No.</th>
+            <th rowspan="2" style="width:7%;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center;font-weight:700;text-wrap:wrap">Unit</th>
+            <th rowspan="2" style="width:6%;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center;font-weight:700;text-wrap:wrap">Qty</th>
+            <th colspan="2" rowspan="2" style="width:31%;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center;font-weight:normal;text-wrap:wrap"><strong>Item Description</strong><br><i>(Agency's Minimum Technical Specifications Requirements)</i></th><th rowspan="2" style="width:8%;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center;font-weight:700;text-wrap:wrap">ABC per unit</th><th colspan="2" style="width:8%;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center;font-weight:700;text-wrap:wrap">Statement of Compliance</th><th rowspan="2" style="width:14%;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center;font-weight:700;text-wrap:wrap">Brand Name, Model,<br>and Other Remarks</th><th rowspan="2" style="width:10%;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center;font-weight:700;text-wrap:wrap">Unit Value</th><th rowspan="2" style="width:11%;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center;font-weight:700;text-wrap:wrap">Total Value</th></tr>
+        <tr><th style="width:4%;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center;font-weight:700;text-wrap:wrap">Yes</th>
+            <th style="width:4%;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center;font-weight:700;text-wrap:wrap">No</th></tr>
+        </thead>
+        <tbody data-each="procurement.root_items" data-as="item" data-child-each="item.sub_items" data-child-as="subitem">
+        <tr data-row-template style="break-inside:avoid;page-break-inside:avoid">
+            <td data-print="item.line_no" style="border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"></td>
+            <td data-print="item.unit" data-rowspan-children="item.sub_items" style="border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"></td>
+            <td data-print="item.quantity" style="border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"></td>
+            <td colspan="2" style="border:1px solid #111;padding:4px;vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere"><strong data-print="item.description" data-format="multiline"></strong></td>
+            <td style="text-align:right;border:1px solid #111;padding:4px;vertical-align:middle"><span data-show-if="item.is_lot">—</span><span data-show-if-not="item.is_lot" data-print="item.cost" data-format="currency" data-input="item.cost" data-input-type="number" data-min="0" data-step="0.01" data-required data-required-collection="procurement.items" data-label="ABC per unit"></span></td>
+            <td style="border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"></td><td style="border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"></td><td style="border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"></td><td data-rowspan-children="item.sub_items" style="border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"></td><td data-rowspan-children="item.sub_items" style="border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"></td>
+        </tr>
+        <tr data-child-row style="break-inside:avoid;page-break-inside:avoid">
+            <td data-print="subitem.line_no" style="border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"></td>
+            <td data-print="subitem.quantity" style="border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"></td>
+            <td colspan="2" style="border:1px solid #111;padding:4px;vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere"><strong data-print="subitem.description" data-format="multiline"></strong></td>
+            <td style="text-align:right;border:1px solid #111;padding:4px;vertical-align:middle"><span data-print="subitem.cost" data-format="currency" data-input="subitem.cost" data-input-type="number" data-min="0" data-step="0.01" data-required data-required-collection="procurement.items" data-label="ABC per unit"></span></td>
+            <td style="border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"></td><td style="border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"></td><td style="border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"></td>
+        </tr>
+        </tbody>
+        <tfoot><tr><td colspan="11" style="text-align:center;border:1px solid #111;padding:4px;vertical-align:middle;text-align:center"><strong>**nothing follows**</strong></td></tr></tfoot>
+    </table>
+
+    <section data-rfq-terms></section>
+
+    <div aria-label="Supplier representative details">
+        <p style="margin:14px 0 6px;font-weight:700;line-height:1.2">Service Provider's/Supplier's Authorized Representative:</p>
+        <table style="width: 100%; font-size: 11px;">
+            <tr>
+                <td style="width: 15%;"><strong>Submitted by:</strong></td>
+                <td style="width: 25%; border-bottom: 1px solid;"></td>
+                <td style="width: 10%;"></td>
+        
+                <td colspan="2" style="width: 25%;"></td>
+                <td style="width: 25%; border-bottom: 1px solid;"></td>
+            </tr>
+            <tr>
+                <td style="width: 15%;"></td>
+                <td align="center" style="width: 25%;"><i>Signature Over Printed Name</i></td>
+                <td style="width: 10%;"></td>
+        
+                <td colspan="2" style="width: 25%;"></td>
+                <td align="center" style="width: 25%;"><i>Date</i></td>
+            </tr>
+            <tr>
+                <td style="width: 15%;"><strong>Designation:</strong></td>
+                <td style="width: 25%; border-bottom: 1px solid;"></td>
+                <td style="width: 10%;"></td>
+        
+                <td style="width: 20%;"><strong>PhilGEPS Registration No.:</strong></td>
+                <td style="width: 5%;"></td>
+                <td style="width: 25%; border-bottom: 1px solid;"></td>
+            </tr>
+            <tr>
+                <td style="width: 15%; padding-top: 5px;"><strong>Business Name:</strong></td>
+                <td style="width: 25%; border-bottom: 1px solid;"></td>
+                <td style="width: 10%;"></td>
+        
+                <td style="width: 20%; padding-top: 5px;"><strong>TIN: &nbsp;(&nbsp;&nbsp;) VAT &nbsp;/&nbsp; (&nbsp;&nbsp;)
+                        NVAT:</strong></td>
+                <td style="width: 5%;"></td>
+                <td style="width: 25%; border-bottom: 1px solid;"></td>
+            </tr>
+            <tr>
+                <td style="width: 15%; padding-top: 5px;"><strong>Business Address:</strong></td>
+                <td style="width: 25%; border-bottom: 1px solid;"></td>
+                <td style="width: 10%;"></td>
+        
+                <td style="width: 20%; padding-top: 5px;"><strong>LBP Account Name:</strong></td>
+                <td style="width: 5%;"></td>
+                <td style="width: 25%; border-bottom: 1px solid;"></td>
+            </tr>
+            <tr>
+                <td style="width: 15%; padding-top: 5px;"><strong>Contact No.::</strong></td>
+                <td style="width: 25%; border-bottom: 1px solid;"></td>
+                <td style="width: 10%;"></td>
+        
+                <td style="width: 20%; padding-top: 5px;"><strong>LBP Account Number:</strong></td>
+                <td style="width: 5%;"></td>
+                <td style="width: 25%; border-bottom: 1px solid;"></td>
+            </tr>
+        
+        </table>
+    </div>
+</main>
+</body>
+</html>

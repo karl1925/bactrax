@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Abstract of Awards / Canvass</title>
+    <style>
+        :root{color:#111;font-family:'Arial Narrow',Arial,Helvetica,sans-serif;font-size:12px;line-height:1.2}*{box-sizing:border-box}body{margin:0;font:inherit}.rfq-document{width:100%}.df{width:100%;border-collapse:collapse;border-spacing:0}.df th,.df td{border:1px solid #111;padding:4px;vertical-align:middle}.df th{text-align:center;font-weight:700}.center{text-align:center!important}.left{text-align:left!important}.right{text-align:right!important}.top{vertical-align:top!important}.identity{margin:4px 0;text-align:center;line-height:1.2}.small{font-size:11px}.muted{color:#475569}.field{min-height:1.2em;outline:1px solid transparent;outline-offset:1px}.field:hover{background:#eef2ff;outline-color:#cbd5e1;cursor:pointer}.required-empty{background:#fee2e2;outline-color:#fca5a5}.supplier-head{background:#fff8d0}.purpose{background:#fff8d0;font-style:italic}.signature{height:22px;border-bottom:1px solid #111}.sign-name{font-weight:800;text-align:center}.sign-role{font-style:italic;text-align:center;font-size:11px}.quote{margin:0 0 3px}.quote:last-child{margin-bottom:0}.nobreak{break-inside:avoid;page-break-inside:avoid}thead{display:table-header-group}tr{break-inside:avoid;page-break-inside:avoid}[data-each-item]{break-inside:avoid;page-break-inside:avoid}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+    </style>
+</head>
+<body>
+<main class="rfq-document" data-template-code="ABS" data-template-version="1">
+    <header class="center">
+        <section data-header data-title="ABSTRACT OF AWARDS / CANVASS"></section>
+    </header>
+
+    <table class="df">
+        <tr><td class="left" style="width:24%">Procurement Project Title / Purpose:</td><td colspan="3" class="left" data-print="procurement.purpose"></td></tr>
+        <tr><td class="left">Approved Budget for the Contract (ABC):</td><td style="width:25%" class="left" data-print="procurement.abc_amount" data-format="currency"></td><td class="left" style="width:16%">End User:</td><td class="left" data-print="procurement.end_user_office.name"></td></tr>
+        <tr><td class="left">Purchase Request No.:</td><td class="left" data-print="procurement.pr_number"></td><td class="left">Mode of Procurement:</td><td class="left" data-print="procurement.mode.name"></td></tr>
+        <tr><td class="left">Request for Quotation No.:</td><td class="left" data-print="procurement.rfq_number"></td><td class="left" data-show-if="procurement.is_delivery_cd">Delivery Period (CD):</td><td class="left" data-show-if="procurement.is_delivery_cd"><span data-print="procurement.delivery_cd"></span> day(s)</td><td class="left" data-show-if-not="procurement.is_delivery_cd">Delivery Date:</td><td class="left" data-show-if-not="procurement.is_delivery_cd" data-print="procurement.delivery_date" data-format="date:MMMM d, yyyy"></td></tr>
+        <tr><td colspan="4" class="left">Abstract of canvass of prices for furnishing and delivering the item(s) listed below. Canvass opened at <span class="field" data-input="award.opening_place" data-input-type="text" data-required data-label="Opening place"></span> on <span data-print="award.opening_date" data-format="date:MMMM d, yyyy"></span> in the presence of the Chairperson and Members. Listed below are quotations received from the participating suppliers. Award recommendation: <strong data-print="award.winning_supplier_name"></strong>.</td></tr>
+    </table>
+
+    <table class="df" style="margin-top:8px" aria-label="Abstract of supplier quotations">
+        <thead><tr><th style="width:6%">Item<br>No.</th><th style="width:7%">Unit</th><th style="width:7%">Qty</th><th style="width:25%">Item Description</th><th style="width:42%">Supplier quotation and offered item details</th><th style="width:13%" class="supplier-head">Lowest Calculated Responsive Bid</th></tr></thead>
+        <tbody data-each="award.item_results" data-as="result" data-row-template data-each-item>
+            <tr><td data-print="result.item.line_no"></td><td data-print="result.item.unit"></td><td data-print="result.item.quantity"></td><td class="left top" data-print="result.item.description"></td>
+                <td class="left top"><div data-each="result.quotes" data-as="quote" data-row-template><p class="quote"><strong data-print="quote.supplier_name"></strong>: <span data-print="quote.amount" data-format="currency"></span><span data-show-if="quote.brand_remarks"><br><span data-print="quote.brand_remarks"></span></span><span data-show-if="quote.compliance"> · <span data-print="quote.compliance"></span></span></p></div></td>
+                <td class="center top"><strong data-print="result.winning_supplier_name"></strong><br><span data-print="result.winning_amount" data-format="currency"></span><br><span class="small" data-print="result.winning_remarks"></span></td></tr>
+        </tbody>
+        <tfoot><tr><td colspan="4" class="right"><strong>TOTAL</strong></td><td class="left"><div data-each="award.suppliers" data-as="supplier" data-row-template><p class="quote"><strong data-print="supplier.name"></strong> — <span data-print="supplier.total_bid" data-format="currency"></span></p></div></td><td class="center"><strong data-print="award.total_responsive_bid" data-format="currency"></strong></td></tr>
+            <tr><td colspan="6" class="left"><strong>**nothing follows**</strong></td></tr>
+            <tr><td colspan="5" class="purpose left"><strong>Purpose:</strong> <span data-print="procurement.purpose"></span></td><td class="right"><strong>TOTAL&nbsp; <span data-print="award.total_responsive_bid" data-format="currency"></span></strong></td></tr>
+        </tfoot>
+    </table>
+
+    <p class="left" style="margin:12px 0 5px"><strong>Concurred by:</strong></p>
+    <table class="df" style="border:0"><tbody data-each="award.bac_signatories" data-as="signatory" data-row-template><tr><td style="width:33%;border:0;padding:12px 14px 0"><div class="signature"></div><div class="sign-name" data-print="signatory.name"></div><div class="sign-role" data-print="signatory.position"></div></td></tr></tbody></table>
+</main>
+</body>
+</html>

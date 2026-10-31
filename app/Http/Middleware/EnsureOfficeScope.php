@@ -2,11 +2,9 @@
 
 namespace App\Http\Middleware;
 
-namespace App\Http\Middleware;
-
 use Closure;
 use Illuminate\Http\Request;
-use App\Models\Procurement;
+use App\Models\Procurement\Procurement;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureOfficeScope
@@ -17,6 +15,11 @@ class EnsureOfficeScope
 
         if (!$user) {
             abort(401, 'Unauthenticated.');
+        }
+
+        // Admins always have access
+        if ($user->isAdmin()) {
+            return $next($request);
         }
 
         // Central processing roles bypass single-office restrictions
@@ -34,13 +37,18 @@ class EnsureOfficeScope
                 : Procurement::findOrFail($procurementId);
 
             $userOfficeIds = $user->offices->pluck('id')->toArray();
-            $activeRouteOfficeId = $procurement->latestRoute?->to_office_id;
+            $hasOriginAccess = in_array(
+                $procurement->end_user_office_id,
+                $userOfficeIds
+            );
 
-            $hasOriginAccess = in_array($procurement->end_user_office_id, $userOfficeIds);
-            $hasRouteAccess = $activeRouteOfficeId && in_array($activeRouteOfficeId, $userOfficeIds);
+            $hasPhaseAccess = $procurement->mode?->phases?->contains(fn ($phase) => $user->canActOnPhase($phase)) ?? false;
 
-            if (!$hasOriginAccess && !$hasRouteAccess) {
-                abort(403, 'Forbidden: Access denied to procurement records outside your assigned office scope.');
+            if (!$hasOriginAccess && !$hasPhaseAccess) {
+                abort(
+                    403,
+                    'Forbidden: Access denied to procurement records outside your assigned office scope.'
+                );
             }
         }
 

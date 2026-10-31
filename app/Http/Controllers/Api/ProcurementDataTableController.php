@@ -4,32 +4,46 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Procurement;
+use App\Models\Procurement\Procurement;
 use Illuminate\Http\JsonResponse;
 
 class ProcurementDataTableController extends Controller
 {
     public function __invoke(Request $request): JsonResponse
     {
+        abort_unless($request->user(), 401);
+        $request->validate([
+            'draw' => ['sometimes', 'integer', 'min:0', 'max:1000000'],
+            'start' => ['sometimes', 'integer', 'min:0', 'max:10000000'],
+            'length' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'search.value' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'office_id' => ['sometimes', 'nullable', 'integer', 'exists:offices,id'],
+            'mode_id' => ['sometimes', 'nullable', 'integer', 'exists:procurement_modes,id'],
+            'status' => ['sometimes', 'nullable', 'in:DRAFT,ROUTING,RETURNED,REJECTED,COMPLETED,CANCELLED,ARCHIVED'],
+            'order.0.column' => ['sometimes', 'integer', 'between:0,6'],
+            'order.0.dir' => ['sometimes', 'in:asc,desc'],
+        ]);
+
         $user = $request->user();
-        $draw = intval($request->input('draw', 1));
-        $start = intval($request->input('start', 0));
-        $length = intval($request->input('length', 10));
-        $searchValue = trim($request->input('search.value', ''));
+        abort_unless($user->isAdmin() || $user->hasPermission('procurement.view'), 403);
+        $draw = max(0, min(1000000, (int) $request->input('draw', 1)));
+        $start = max(0, min(10000000, (int) $request->input('start', 0)));
+        $length = max(1, min(100, (int) $request->input('length', 10)));
+        $searchValue = mb_substr(trim((string) $request->input('search.value', '')), 0, 120);
 
         $query = Procurement::with(['endUserOffice', 'mode', 'currentPhase']);
 
         // 1. Office Scope Boundary (Originating Office OR Currently Routed Office OR Central Role)
         if (!$user->isCentralRole()) {
             $userOfficeIds = $user->offices->pluck('id')->toArray();
+            $userRoleIds = $user->roles()->pluck('roles.id');
 
-            $query->where(function ($q) use ($userOfficeIds) {
+            $query->where(function ($q) use ($userOfficeIds, $userRoleIds) {
                 $q->whereIn('end_user_office_id', $userOfficeIds)
-                    ->orWhereHas('latestRoute', function ($rq) use ($userOfficeIds) {
-                        $rq->whereIn('to_office_id', $userOfficeIds);
-                    });
+                ->orWhereHas('mode.phases.roles', fn($rq) => $rq->whereIn('roles.id', $userRoleIds)->where('procurement_mode_phase_roles.can_act', true));
             });
         }
+        $totalRecords = (clone $query)->count();
 
         // 2. Dropdown Filters
         if ($request->filled('office_id')) {
@@ -44,38 +58,39 @@ class ProcurementDataTableController extends Controller
 
         // 3. Global Text Search (Includes status column)
         if (!empty($searchValue)) {
-            $query->where(function ($q) use ($searchValue) {
-                $q->where('tracking_number', 'LIKE', "%{$searchValue}%")
-                    ->orWhere('title', 'LIKE', "%{$searchValue}%")
-                    ->orWhere('status', 'LIKE', "%{$searchValue}%") // Enables searching by status text (e.g., DRAFT, ROUTED)
-                    ->orWhereHas('endUserOffice', function ($oq) use ($searchValue) {
-                        $oq->where('code', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('name', 'LIKE', "%{$searchValue}%");
+            $like = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $searchValue).'%';
+            $query->where(function ($q) use ($like) {
+                $q->where('pr_number', 'LIKE', $like)
+                    ->orWhere('purpose', 'LIKE', $like)
+                    ->orWhere('status', 'LIKE', "%{$searchValue}%") // Enables searching by status text (e.g., DRAFT, ROUTING)
+                    ->orWhereHas('endUserOffice', function ($oq) use ($like) {
+                        $oq->where('code', 'LIKE', $like)
+                            ->orWhere('name', 'LIKE', $like);
                     })
-                    ->orWhereHas('mode', function ($mq) use ($searchValue) {
-                        $mq->where('name', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('code', 'LIKE', "%{$searchValue}%");
+                    ->orWhereHas('mode', function ($mq) use ($like) {
+                        $mq->where('name', 'LIKE', $like)
+                            ->orWhere('code', 'LIKE', $like);
                     });
             });
         }
 
-        $totalRecords = Procurement::count();
         $filteredRecords = (clone $query)->count();
 
         // 4. Column Ordering
         $orderColumnIndex = $request->input('order.0.column');
         $orderDirection = $request->input('order.0.dir', 'desc');
         $columns = [
-            0 => 'tracking_number',
-            1 => 'title',
+            0 => 'pr_number',
+            1 => 'purpose',
             2 => 'end_user_office_id',
-            3 => 'procurement_mode_code',
-            4 => 'abc_amount',
-            5 => 'status',
+            3 => 'procurement_mode_id',
+            4 => 'fund_cluster',
+            5 => 'abc_amount',
+            6 => 'status',
         ];
 
         if (isset($columns[$orderColumnIndex])) {
-            $query->orderBy($columns[$orderColumnIndex], $orderDirection);
+            $query->orderBy($columns[$orderColumnIndex], strtolower((string) $orderDirection) === 'asc' ? 'asc' : 'desc');
         } else {
             $query->orderBy('id', 'desc');
         }
@@ -85,11 +100,13 @@ class ProcurementDataTableController extends Controller
             ->get()
             ->map(function ($p) {
                 return [
-                    'tracking_number' => '<span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">' . e($p->tracking_number) . '</span>',
-                    'title' => e($p->title),
+                    'pr_number' => '<span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">' . e($p->pr_number) . '</span>',
+                    'purpose' => e($p->purpose),
                     'office_code' => e($p->endUserOffice->code ?? 'N/A'),
                     'mode_code' => e($p->mode->code ?? 'N/A'),
-                    'abc_formatted' => '₱ ' . number_format($p->abc_amount, 2),
+                    'procurement_mode_name' => e($p->mode->name ?? 'N/A'),
+                    'fund_cluster' => e($p->fund_cluster ?? 'N/A'),
+                    'abc_amount' => '₱ ' . number_format($p->abc_amount, 2),
                     'status' => $p->status,
                     'actions' => '<a href="' . route('procurements.show', $p->id) . '" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-xs">View</a>',
                 ];

@@ -1,162 +1,34 @@
 @extends('layouts.app')
-
-@section('title', 'Create Purchase Request')
-
+@section('title', 'New ' . $selectedMode->code . ' Purchase Request')
 @section('page-header')
-<div>
-    <a
-        href="{{ route('procurements.index') }}"
-        class="inline-flex items-center gap-1.5 mb-2 text-xs font-semibold text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition"
-    >
-        <i class="fa-solid fa-arrow-left text-[10px]"></i>
-        Back to Directory
-    </a>
-
-    <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100">
-        Create Purchase Request
-    </h1>
-
-    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-        Initiate new project under RA 12009 statutory rules
-    </p>
+<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div class="min-w-0">
+        <a href="{{ $returnUrl }}" data-discard-url class="mb-3 inline-flex items-center gap-2 text-xs font-bold text-slate-500 transition hover:text-[#134991] dark:text-slate-400 dark:hover:text-blue-300"><i class="fa-solid fa-arrow-left"></i> Back</a>
+        <div class="flex flex-wrap items-center gap-2"><span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-[#134991] dark:bg-blue-950 dark:text-blue-300"><i class="fa-solid fa-file-circle-plus"></i></span><h1 class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">New {{ $selectedMode->code }} Purchase Request</h1></div>
+        <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-500 dark:text-slate-400">{{ $selectedMode->description ?: $selectedMode->name }}</p>
+    </div>
+    <span class="inline-flex items-center gap-2 self-start rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-800 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300"><i class="fa-solid fa-file-pen"></i> Draft setup</span>
 </div>
 @endsection
-
 @section('content')
-<form action="{{ route('procurements.store') }}" method="POST" class="space-y-6">
-    @csrf
-
-    <!-- General Project Information -->
-    <div class="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-        <h2 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">Project Details</h2>
-
-        <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Project Title <span class="text-rose-500">*</span></label>
-            <input type="text" name="title" required value="{{ old('title') }}" placeholder="e.g. Procurement of High-Capacity Network Switches" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-600">
+<div class="mx-auto max-w-5xl space-y-5 pb-10">
+    @if(session('success'))<div class="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"><i class="fa-solid fa-circle-check mt-0.5"></i><span>{{ session('success') }}</span></div>@endif
+    @if($errors->any())<div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300"><p class="font-extrabold">Please check the following fields.</p><ul class="mt-2 list-inside list-disc space-y-1">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+    <div class="flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50/80 p-4 dark:border-blue-900 dark:bg-blue-950/30"><span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white text-[#134991] shadow-sm dark:bg-slate-900 dark:text-blue-300"><i class="fa-solid fa-circle-info"></i></span><div><p class="text-sm font-extrabold text-blue-950 dark:text-blue-200">PR number will be assigned in the next page.</p><p class="mt-1 text-xs leading-5 text-blue-800/80 dark:text-blue-300/80">This step creates a draft only. You can complete the configured forms and attachments after creation; routing controls will become available when required attachments are ready.</p></div></div>
+    <form action="{{ route('procurements.store') }}" method="POST" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        @csrf
+        <input type="hidden" name="procurement_mode_id" value="{{ $selectedMode->id }}">
+        <input type="hidden" name="save_action" value="draft">
+        <div class="border-b border-slate-100 px-5 py-5 dark:border-slate-800 sm:px-7"><div class="flex items-center gap-3"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"><i class="fa-solid fa-clipboard-list"></i></span><div><h2 class="text-sm font-extrabold text-slate-900 dark:text-white">Initial purchase request details</h2><p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Enter the basic information for this {{ $selectedMode->code }} request.</p></div></div></div>
+        <div class="grid gap-5 px-5 py-6 sm:grid-cols-2 sm:px-7">
+            <div class="sm:col-span-2"><label for="purpose" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Purpose <span class="text-rose-500">*</span></label><textarea id="purpose" name="purpose" rows="3" required maxlength="5000" placeholder="Describe the purpose of the purchase request" class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-white">{{ old('purpose') }}</textarea>@error('purpose')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror</div>
+            <div><label for="fund_cluster" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Fund Cluster <span class="text-rose-500">*</span></label><select id="fund_cluster" name="fund_cluster" required class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="">Select fund cluster</option>@foreach($fundClusters as $fundCluster)<option value="{{ $fundCluster->code }}" @selected(old('fund_cluster') == $fundCluster->code)>{{ $fundCluster->code }}{{ $fundCluster->name ? ' — ' . $fundCluster->name : '' }}</option>@endforeach</select>@error('fund_cluster')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror</div>
+            <div><label for="end_user_office_id" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">End-user Office <span class="text-rose-500">*</span></label><select id="end_user_office_id" name="end_user_office_id" required class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-white"><option value="">Select office</option>@foreach($offices as $office)<option value="{{ $office->id }}" @selected(old('end_user_office_id') == $office->id)>{{ $office->name }}</option>@endforeach</select>@error('end_user_office_id')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror</div>
+            <div><label for="pr_date" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Date of PR <span class="text-rose-500">*</span></label><input id="pr_date" type="date" name="pr_date" value="{{ old('pr_date', now()->format('Y-m-d')) }}" required class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-white">@error('pr_date')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror</div>
+            <div><label for="responsibility_code" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Responsibility Center Code <span class="font-medium text-slate-400">(Optional)</span></label><input id="responsibility_code" name="responsibility_code" value="{{ old('responsibility_code') }}" maxlength="255" placeholder="Enter code, if applicable" class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-white">@error('responsibility_code')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror</div>
         </div>
+        <div class="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50/80 px-5 py-4 dark:border-slate-800 dark:bg-slate-950/60 sm:flex-row sm:items-center sm:justify-between sm:px-7"><p class="text-[11px] leading-5 text-slate-500">Next saves your draft. You will then complete forms and attachment requirements.</p><div class="flex justify-end gap-2"><button type="button" data-discard-url="{{ $returnUrl }}" data-discard-title="Cancel draft setup?" data-discard-message="Your unsaved details will be discarded and you will return to the page you came from." class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Cancel</button><button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-[#134991] px-5 py-2.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-500/20"><span>Next</span><i class="fa-solid fa-arrow-right"></i></button></div></div>
+    </form>
+</div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">End-User Office <span class="text-rose-500">*</span></label>
-                
-                    @php
-                        $primaryOfficeId = Auth::user()->primaryOffice()?->id;
-                    @endphp
-                    <select name="end_user_office_id" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-600">
-                    <option value="">Select Office</option>
-                    
-                    @foreach(Auth::user()->offices as $office)
-                        <option value="{{ $office->id }}"
-                            {{ old('end_user_office_id', $primaryOfficeId) == $office->id ? 'selected' : '' }}>
-                            {{ $office->name }} ({{ $office->code }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Procurement Mode <span class="text-rose-500">*</span></label>
-                <select name="procurement_mode_id" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-600">
-                    <option value="">Select Modality</option>
-                    @foreach($modes as $mode)
-                        <option value="{{ $mode->id }}" {{ old('procurement_mode_id') == $mode->id ? 'selected' : '' }}>
-                            {{ $mode->name }} (Cap: {{ $mode->max_abc ? '₱ ' . number_format($mode->max_abc, 2) : 'Uncapped' }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-    </div>
-
-    <!-- Line Items Breakdown -->
-    <div class="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-            <h2 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Itemized Breakdown</h2>
-            <button type="button" id="add-item-btn" class="px-3 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 rounded-lg text-xs font-semibold transition">
-                <i class="fa-solid fa-plus mr-1"></i> Add Line Item
-            </button>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-                <thead>
-                    <tr class="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                        <th class="py-2 px-2">Item Description</th>
-                        <th class="py-2 px-2 w-24">Qty</th>
-                        <th class="py-2 px-2 w-28">Unit</th>
-                        <th class="py-2 px-2 w-36">Unit Price (₱)</th>
-                        <th class="py-2 px-2 w-36 text-right">Extended Cost</th>
-                        <th class="py-2 px-2 w-12 text-center"></th>
-                    </tr>
-                </thead>
-                <tbody id="items-container" class="divide-y divide-slate-100 dark:divide-slate-800">
-                    <tr class="item-row">
-                        <td class="p-2"><input type="text" name="items[0][description]" required placeholder="Item specifications..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100 outline-none"></td>
-                        <td class="p-2"><input type="number" name="items[0][quantity]" min="1" value="1" required class="item-qty w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100 outline-none"></td>
-                        <td class="p-2"><input type="text" name="items[0][unit_of_measure]" required placeholder="unit / lot" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100 outline-none"></td>
-                        <td class="p-2"><input type="number" step="0.01" min="0.01" name="items[0][unit_cost]" required placeholder="0.00" class="item-cost w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100 outline-none"></td>
-                        <td class="p-2 text-right font-mono font-bold item-total">₱ 0.00</td>
-                        <td class="p-2 text-center"><button type="button" class="remove-row-btn text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash"></i></button></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
-            <div class="text-right">
-                <span class="text-xs text-slate-500 uppercase font-bold tracking-wider">Calculated Total ABC:</span>
-                <span id="grand-total" class="block text-xl font-extrabold font-mono text-indigo-600 dark:text-indigo-400">₱ 0.00</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Submit Button -->
-    <div class="flex justify-end gap-3">
-        <a href="{{ route('procurements.index') }}" class="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-300 transition">Cancel</a>
-        <button type="submit" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-500/20 transition">Next</button>
-    </div>
-</form>
 @endsection
-
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        let itemIndex = 1;
-
-        function calculateTotals() {
-            let grandTotal = 0;
-            $('.item-row').each(function() {
-                let qty = parseFloat($(this).find('.item-qty').val()) || 0;
-                let cost = parseFloat($(this).find('.item-cost').val()) || 0;
-                let lineTotal = qty * cost;
-                $(this).find('.item-total').text('₱ ' + lineTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                grandTotal += lineTotal;
-            });
-            $('#grand-total').text('₱ ' + grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-        }
-
-        $(document).on('input', '.item-qty, .item-cost', calculateTotals);
-
-        $('#add-item-btn').on('click', function() {
-            let rowHtml = `
-                <tr class="item-row">
-                    <td class="p-2"><input type="text" name="items[${itemIndex}][description]" required placeholder="Item specifications..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100 outline-none"></td>
-                    <td class="p-2"><input type="number" name="items[${itemIndex}][quantity]" min="1" value="1" required class="item-qty w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100 outline-none"></td>
-                    <td class="p-2"><input type="text" name="items[${itemIndex}][unit_of_measure]" required placeholder="unit / lot" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100 outline-none"></td>
-                    <td class="p-2"><input type="number" step="0.01" min="0.01" name="items[${itemIndex}][unit_cost]" required placeholder="0.00" class="item-cost w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100 outline-none"></td>
-                    <td class="p-2 text-right font-mono font-bold item-total">₱ 0.00</td>
-                    <td class="p-2 text-center"><button type="button" class="remove-row-btn text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash"></i></button></td>
-                </tr>`;
-            $('#items-container').append(rowHtml);
-            itemIndex++;
-        });
-
-        $(document).on('click', '.remove-row-btn', function() {
-            if ($('.item-row').length > 1) {
-                $(this).closest('tr').remove();
-                calculateTotals();
-            }
-        });
-    });
-</script>
-@endpush

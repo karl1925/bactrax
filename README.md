@@ -41,6 +41,32 @@ php artisan boost:install
 
 Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
+## Procurement form PDFs
+
+PR and RFQ form PDFs are rendered as selectable text by server-side Chromium. Production
+and local environments must install Chrome or Chromium and make its binary available on
+`PATH`, or set `LARAVEL_PDF_CHROME_BINARY` to its absolute path. Install PHP dependencies
+with `composer install` to include the `chrome-php/chrome` driver.
+
+Run the web application as a non-root user so Chromium can use its sandbox. If the
+deployment environment cannot support the Chromium sandbox, configure
+`LARAVEL_PDF_CHROME_NO_SANDBOX=true` only after assessing the additional security risk.
+
+## Realtime procurement notifications
+
+Notifications are stored in the database, broadcast to the signed-in user's private
+channel, and emailed to the requester and relevant workflow/signatory roles. Run the
+new migrations with `php artisan migrate`. To enable realtime delivery, configure
+matching `REVERB_APP_*`, `REVERB_HOST`, `REVERB_PORT`, and `REVERB_SCHEME` values in
+`.env`, set `BROADCAST_CONNECTION=reverb`, and expose the matching `VITE_REVERB_*`
+values to Vite. For local HTTP development, set the scheme to `http` and run
+`php artisan reverb:start` alongside the web server and Vite. Rebuild the frontend
+after changing `VITE_REVERB_*` values. In production, use the public WebSocket host
+and TLS settings that browsers can reach. Configure `MAIL_*` for email delivery;
+the example environment logs mail locally.
+
+Set `APP_URL` to the public HTTPS origin in the production server environment before running `php artisan config:cache`. The shared procurement email template loads its logo and banner from `/email_templates/pr_status/images/` under that origin, so a localhost `APP_URL` will produce image links that recipients cannot reach.
+
 ## Contributing
 
 Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Minutes of Opening of Bid Price Quotation</title>
+    <style>
+        :root{color:#111;font-family:'Palatino Linotype',Palatino,serif;font-size:12px;line-height:1.18}*{box-sizing:border-box}body{margin:0;font:inherit}.rfq-document{width:100%}.df{width:100%;border-collapse:collapse;border-spacing:0}.df th,.df td{border:1px solid #111;padding:4px;vertical-align:middle}.df th{text-align:center;font-weight:700}.center{text-align:center!important}.left{text-align:left!important}.right{text-align:right!important}.top{vertical-align:top!important}.title{padding:6px!important;background:#ffff99;text-align:center;font-weight:800}.identity{margin:4px 0;text-align:center;line-height:1.15}.section{margin:10px 0 5px;font-weight:800}.small{font-size:10px}.muted{color:#475569}.field{min-height:1.2em;outline:1px solid transparent;outline-offset:1px}.field:hover{background:#eef2ff;outline-color:#cbd5e1;cursor:pointer}.required-empty{background:#fee2e2;outline-color:#fca5a5}.signature{height:24px;border-bottom:1px solid #111}.sign-name{font-weight:800;text-align:center}.sign-role{font-style:italic;text-align:center;font-size:10px}.attendees td{border:0;padding:3px 5px}.attendees .line{border-bottom:1px solid #111}.summary{margin:5px 0}.quote{margin:0 0 3px}.quote:last-child{margin-bottom:0}.supplier{font-weight:800}.nobreak{break-inside:avoid;page-break-inside:avoid}thead{display:table-header-group}tr{break-inside:avoid;page-break-inside:avoid}[data-each-item]{break-inside:avoid;page-break-inside:avoid}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+    </style>
+</head>
+<body>
+<main class="rfq-document" data-template-code="MIN" data-template-version="1">
+<header class="center">
+    <section data-header data-title="MINUTES OF OPENING OF BID PRICE QUOTATION"></section>
+</header>
+
+    <table class="df summary">
+        <tr><th class="left" style="width:18%">TIME &amp; DATE:</th><td class="left" style="width:42%"><span class="field" data-input="award.opening_time" data-input-type="text" data-required data-label="Opening time"></span> <span class="field" data-input="award.opening_date" data-input-type="date" data-format="date:MMMM d, yyyy" data-required data-label="Opening date"></span></td><th class="left" style="width:16%">PLACE:</th><td class="left"><span class="field" data-input="award.opening_place" data-input-type="text" data-default="DICT - Region 02, Tuguegarao City, Cagayan" data-required data-label="Opening place"></span></td></tr>
+    </table>
+
+    <p class="section">PRESENT:</p>
+    <table class="df attendees">
+        <tbody data-each="award.attendees" data-as="attendee" data-row-template>
+            <tr><td style="width:34%" class="sign-name" data-print="attendee.name"></td><td style="width:30%" class="left" data-print="attendee.position"></td><td style="width:28%" class="line"></td><td style="width:8%" class="center small" data-show-if="attendee.retired">Retired</td></tr>
+        </tbody>
+    </table>
+
+    <p class="section">ITEMS DELIBERATED AND RECOMMENDATIONS:</p>
+    <ul class="summary">
+        <li>Procurement Project Title / Purpose: <strong data-print="procurement.purpose"></strong></li>
+        <li>Approved Budget for the Contract (ABC): <strong data-print="procurement.abc_amount" data-format="currency"></strong></li>
+        <li>Purchase Request No.: <strong data-print="procurement.pr_number"></strong></li>
+        <li>Request for Quotation No.: <strong data-print="procurement.rfq_number"></strong></li>
+        <li>Mode of Procurement: <strong data-print="procurement.mode.name"></strong></li>
+        <li>Place of Delivery: <strong data-print="procurement.end_user_office.name"></strong></li>
+        <li>Award basis: <strong class="field" data-input="award.award_basis" data-input-type="select" data-options='[{"value":"LOT","label":"Per LOT basis"},{"value":"ITEM","label":"Per ITEM basis"}]' data-required data-label="Award basis"></strong>.</li>
+        <li><span data-print="award.suppliers.length"></span> supplier quotation(s) were received.</li>
+    </ul>
+
+    <div class="nobreak">
+        <table class="df" aria-label="Bid quotation comparison">
+            <thead><tr><th style="width:7%">Item<br>No.</th><th style="width:8%">Unit</th><th style="width:8%">Quantity</th><th style="width:28%">Item Description</th><th style="width:37%">Supplier quotations / offered specifications</th><th style="width:12%">Lowest Calculated Responsive Bid</th></tr></thead>
+            <tbody data-each="award.item_results" data-as="result" data-row-template data-each-item>
+                <tr>
+                    <td data-print="result.item.line_no"></td><td data-print="result.item.unit"></td><td data-print="result.item.quantity"></td><td class="left top" data-print="result.item.description"></td>
+                    <td class="left top"><div data-each="result.quotes" data-as="quote" data-row-template><p class="quote"><strong class="supplier" data-print="quote.supplier_name"></strong> — <span data-print="quote.amount" data-format="currency"></span><span data-show-if="quote.remarks">; <span data-print="quote.remarks"></span></span></p></div></td>
+                    <td class="center top"><strong data-print="result.winning_supplier_name"></strong><br><span data-print="result.winning_amount" data-format="currency"></span></td>
+                </tr>
+            </tbody>
+            <tfoot><tr><th colspan="4" class="right">TOTAL BID AMOUNT</th><td class="left"><div data-each="award.suppliers" data-as="supplier" data-row-template><p class="quote"><strong data-print="supplier.name"></strong> — <span data-print="supplier.total_bid" data-format="currency"></span></p></div></td><td class="center"><strong data-print="award.total_responsive_bid" data-format="currency"></strong></td></tr></tfoot>
+        </table>
+    </div>
+
+    <table class="df" style="margin-top:14px;border:0"><tr>
+        <td style="width:50%;border:0;padding:12px 20px 0"><div class="signature"></div><div class="sign-name" data-print="award.prepared_by_name"></div><div class="sign-role" data-print="award.prepared_by_position">BAC Secretariat</div></td>
+        <td style="width:50%;border:0;padding:12px 20px 0"><div class="signature"></div><div class="sign-name" data-print="award.bac_chair_name"></div><div class="sign-role">BAC Chairperson</div></td>
+    </tr></table>
+</main>
+</body>
+</html>

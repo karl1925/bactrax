@@ -16,10 +16,17 @@ class EnsureHasPrivilege
             abort(401, 'Unauthenticated.');
         }
 
-        // Check if user has any role assigned to the required workflow privilege code
-        $hasPrivilege = $user->roles()->whereHas('privileges', function ($query) use ($privilegeCode) {
-            $query->where('code', $privilegeCode);
-        })->exists();
+        // Admins always have all privileges
+        if ($user->isAdmin()) {
+            return $next($request);
+        }
+
+        // Check if user has any role assigned to the required workflow privilege
+        $hasPrivilege = $user->roles()
+            ->whereHas('privileges', function ($query) use ($privilegeCode) {
+                $query->where('code', $privilegeCode);
+            })
+            ->exists();
 
         if (!$hasPrivilege) {
             abort(403, "Forbidden: You lack the required workflow privilege [{$privilegeCode}].");

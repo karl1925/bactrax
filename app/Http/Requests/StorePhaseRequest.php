@@ -3,59 +3,40 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class StorePhaseRequest extends FormRequest
+class StorePhaseRequest extends FormRequest // or StoreModePhaseRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->roles()->whereHas('permissions', function ($q) {
-            $q->where('name', 'modes.manage');
-        })->exists();
+        $user = $this->user();
+        return $user && ($user->isAdmin() || $user->hasPermission('modes.edit'));
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        return [
-            'phase_sequence' => [
-                'required',
-                'integer',
-                'min:1',
-            ],
-            'phase_name' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-            'description' => [
-                'nullable',
-                'string',
-            ],
-            'allowable_days' => [
-                'required',
-                'integer',
-                'min:1',
-                'max:60', // Statutory ceiling under RA 12009
-            ],
-        ];
-    }
+        $modeId = $this->route('mode')?->id;
+        $phaseId = $this->route('phase')?->id;
 
-    /**
-     * Custom validation messages.
-     */
-    public function messages(): array
-    {
         return [
-            'phase_sequence.required' => 'Phase step sequence index is required.',
-            'phase_name.required' => 'Please provide a descriptive phase title.',
-            'allowable_days.max' => 'Turnaround SLA ceiling cannot exceed 60 calendar days under RA 12009 statutory rules.',
+            'phase_sequence' => ['required', 'integer', 'min:1', Rule::unique('procurement_mode_phases', 'phase_sequence')->where(fn ($query) => $query->where('procurement_mode_id', $modeId))->ignore($phaseId)],
+            'phase_name'     => ['required', 'string', 'max:255'],
+            'allowable_days' => ['required', 'integer', 'min:1', 'max:180'],
+            'description'    => ['nullable', 'string'],
+            'role_ids'       => ['nullable', 'array', 'max:100'],
+            'role_ids.*'     => ['required', 'integer', 'distinct', 'exists:roles,id'],
+
+            // Attachment rules validation
+            'attachments'                            => ['nullable', 'array', 'max:100'],
+            'attachments.*.id'                       => ['nullable', 'integer', 'exists:attachments,id'],
+            'attachments.*.name'                     => ['required', 'string', 'max:255'],
+            'attachments.*.form_id'                  => ['nullable', 'integer', Rule::exists('forms', 'id')->where(fn ($query) => $query->where('status', 'published'))],
+            'attachments.*.is_mandatory'             => ['nullable', 'boolean'],
+
+            // Signatory chain validation (CRITICAL FOR $request->validated())
+            'attachments.*.signatories'              => ['nullable', 'array', 'max:50'],
+            'attachments.*.signatories.*.role_id'   => ['required', 'exists:roles,id'],
+            'attachments.*.signatories.*.sequence'  => ['required', 'integer', 'min:1', 'max:50'],
         ];
     }
 }

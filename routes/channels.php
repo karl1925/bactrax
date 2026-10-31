@@ -4,9 +4,9 @@ use Illuminate\Support\Facades\Broadcast;
 use App\Models\{User};
 
 Broadcast::channel('user.{userId}', function (User $user, int $userId) {
-    return true;
+    return (int) $user->getKey() === $userId;
 });
 
 Broadcast::channel('office.{officeId}', function (User $user, int $officeId) {
-    return true;
+    return $user->offices()->whereKey($officeId)->exists();
 });

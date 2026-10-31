@@ -1,0 +1,2788 @@
+{
+  "schemaFormat": "bactrax.model-form-catalog/v1",
+  "title": "BACTrax procurement form data catalog",
+  "version": 4,
+  "description": "Shared data-binding contract for every imported procurement form. ProcurementFormSeeder checks each template binding against this schema before seeding.",
+  "root": "procurement",
+  "relationshipDepthLimit": 5,
+  "displayFormats": {
+    "currency": "Formats numeric values as Philippine pesos.",
+    "number": "Formats numeric values using the en-PH locale.",
+    "date": {
+      "syntax": "data-format=\"date:<pattern>\"; date inputs default to dd-Mmm-yyyy when no pattern is provided.",
+      "tokens": {
+        "d": "day without leading zero",
+        "dd": "day with leading zero",
+        "M": "month number",
+        "MM": "month number with leading zero",
+        "MMM": "short month name",
+        "MMMM": "full month name",
+        "yy": "two-digit year",
+        "yyyy": "four-digit year"
+      },
+      "examples": [
+        "date:dd-Mmm-yyyy",
+        "date:MMMM d, yyyy",
+        "date:d MMM yyyy",
+        "date:MM/dd/yyyy",
+        "date:yyyy-MM-dd"
+      ]
+    }
+  },
+  "targetBindings": {
+    "rfq_delivery_schedule": {
+      "ownerSelector": "td[data-target=\"#rfq-delivery-input\"]",
+      "targetSelector": "#rfq-delivery-input",
+      "controller": "procurement.is_delivery_cd",
+      "selectionAttribute": "data-target-value",
+      "cases": {
+        "true": {
+          "input": "procurement.delivery_cd",
+          "type": "number",
+          "default": 7,
+          "required": true,
+          "clears": "procurement.delivery_date",
+          "durationNote": "Count the seven days excluding Saturdays and Sundays."
+        },
+        "false": {
+          "input": "procurement.delivery_date",
+          "type": "date",
+          "default": "runtimePayload.procurement.delivery_date",
+          "required": true,
+          "clears": "procurement.delivery_cd"
+        }
+      },
+      "behavior": "The generic form renderer shows the matching input inside the target cell; selected values and conditional required validation remain bound to procurement fields."
+    }
+  },
+  "runtimePayload": {
+    "controller": "App\\Http\\Controllers\\ProcurementController@show",
+    "procurement": {
+      "purpose": "procurements.purpose",
+      "abc_amount": "procurements.abc_amount (recalculated from saved PR items)",
+      "pr_number": "procurements.pr_number",
+      "rfq_number": "Derived from pr_number by replacing the leading PR prefix with RFQ; never stored",
+      "is_delivery_cd": "procurements.is_delivery_cd",
+      "delivery_cd": "procurements.delivery_cd (cleared when is_delivery_cd is false)",
+      "delivery_date": "procurements.delivery_date (cleared when is_delivery_cd is true)",
+      "quotation_deadline": "procurements.quotation_deadline",
+      "rfq_documents": "Selected rfq_documents ids joined through procurement_required_docs",
+      "end_user_office": {
+        "id": "offices.id",
+        "name": "offices.name"
+      },
+      "mode": {
+        "id": "procurement_modes.id",
+        "code": "procurement_modes.code",
+        "name": "procurement_modes.name"
+      },
+      "root_items": {
+        "source": "Procurement::rootItems with subItems loaded",
+        "fields": [
+          "is_lot",
+          "line_no",
+          "unit",
+          "description",
+          "quantity",
+          "cost"
+        ],
+        "sub_items": [
+          "line_no",
+          "description",
+          "quantity",
+          "cost"
+        ]
+      },
+      "items": {
+        "source": "Procurement::items ordered by line_no, including lot headers and child items",
+        "fields": [
+          "id",
+          "parent_id",
+          "item_bank_item_id",
+          "is_lot",
+          "line_no",
+          "unit",
+          "description",
+          "quantity",
+          "cost"
+        ],
+        "editable": "Only item.cost (ABC per unit) on non-lot items; save updates procurement_items.cost and recalculates procurements.abc_amount"
+      }
+    },
+    "sources": {
+      "offices": [
+        "id",
+        "code",
+        "name",
+        "location_type"
+      ],
+      "fund_clusters": [
+        "code",
+        "name"
+      ],
+      "procurement_modes": [
+        "id",
+        "code",
+        "name",
+        "min_abc",
+        "max_abc"
+      ]
+    },
+    "form_defaults": "The bound attachment's Form.configuration.template_data is merged into the runtime context.",
+    "saved_values": "Non-procurement attachment inputs are stored in existingAttachmentData[attachment_id].form_data. procurement.* and procurement.items.{id}.cost bindings persist to their Procurement and ProcurementItem records."
+  },
+  "sources": {
+    "offices": {
+      "model": "App\\Models\\Office",
+      "value": "id",
+      "label": "name plus code",
+      "filters": {
+        "is_active": true
+      },
+      "fields": [
+        "id",
+        "code",
+        "name",
+        "location_type"
+      ]
+    },
+    "fund_clusters": {
+      "model": "App\\Models\\FundCluster",
+      "value": "name",
+      "label": "name",
+      "filters": {
+        "is_active": true
+      },
+      "fields": [
+        "code",
+        "name"
+      ]
+    },
+    "procurement_modes": {
+      "model": "App\\Models\\ProcurementMode\\ProcurementMode",
+      "value": "id",
+      "label": "name",
+      "filters": {
+        "is_active": true
+      },
+      "fields": [
+        "id",
+        "code",
+        "name",
+        "min_abc",
+        "max_abc"
+      ]
+    }
+  },
+  "models": {
+    "procurement": {
+      "class": "App\\Models\\Procurement\\Procurement",
+      "table": "procurements",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "input": "none",
+          "readOnly": true
+        },
+        "pr_number": {
+          "type": "string",
+          "input": "text",
+          "label": "Purchase Request Number",
+          "maxLength": 32,
+          "nullable": true,
+          "readOnly": true
+        },
+        "purpose": {
+          "type": "string",
+          "input": "textarea",
+          "label": "Purpose",
+          "nullable": true,
+          "maxLength": null
+        },
+        "fund_cluster": {
+          "type": "string",
+          "input": "select",
+          "label": "Fund Cluster",
+          "source": "fund_clusters",
+          "nullable": true
+        },
+        "responsibility_code": {
+          "type": "string",
+          "input": "text",
+          "label": "Responsibility Center Code",
+          "nullable": true
+        },
+        "pr_date": {
+          "type": "date",
+          "input": "date",
+          "label": "Date",
+          "nullable": true
+        },
+        "is_delivery_cd": {
+          "type": "boolean",
+          "input": "checkbox",
+          "label": "Delivery duration is in calendar days",
+          "default": false,
+          "nullable": false
+        },
+        "delivery_cd": {
+          "type": "integer",
+          "input": "number",
+          "label": "Delivery duration in calendar days",
+          "min": 1,
+          "nullable": true
+        },
+        "delivery_date": {
+          "type": "date",
+          "input": "date",
+          "label": "Delivery date",
+          "nullable": true
+        },
+        "quotation_deadline": {
+          "type": "datetime",
+          "input": "datetime-local",
+          "label": "Quotation submission deadline",
+          "nullable": true
+        },
+        "end_user_office_id": {
+          "type": "integer",
+          "input": "select",
+          "label": "End User Office",
+          "source": "offices",
+          "nullable": true
+        },
+        "procurement_mode_id": {
+          "type": "integer",
+          "input": "select",
+          "label": "Mode of Procurement",
+          "source": "procurement_modes",
+          "nullable": false
+        },
+        "current_phase_id": {
+          "type": "integer",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true
+        },
+        "returned_from_phase_id": {
+          "type": "integer",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true
+        },
+        "abc_amount": {
+          "type": "decimal",
+          "input": "none",
+          "label": "Approved Budget for the Contract",
+          "precision": 15,
+          "scale": 2,
+          "nullable": true,
+          "readOnly": true,
+          "derived": "sum(quantity * cost for non-lot procurement.items); synchronized by PR and attachment form save paths"
+        },
+        "status": {
+          "type": "enum",
+          "input": "none",
+          "nullable": false,
+          "default": "DRAFT",
+          "readOnly": true,
+          "values": [
+            "DRAFT",
+            "RETURNED",
+            "REJECTED",
+            "CANCELLED",
+            "ROUTING",
+            "COMPLETED",
+            "ARCHIVED"
+          ]
+        },
+        "created_by": {
+          "type": "integer",
+          "input": "none",
+          "readOnly": true
+        },
+        "created_at": {
+          "type": "datetime",
+          "input": "none",
+          "readOnly": true
+        },
+        "updated_at": {
+          "type": "datetime",
+          "input": "none",
+          "readOnly": true
+        }
+      },
+      "relationships": {
+        "end_user_office": {
+          "type": "belongsTo",
+          "target": "office",
+          "foreignKey": "end_user_office_id"
+        },
+        "mode": {
+          "type": "belongsTo",
+          "target": "procurement_mode",
+          "foreignKey": "procurement_mode_id"
+        },
+        "current_phase": {
+          "type": "belongsTo",
+          "target": "procurement_phase",
+          "foreignKey": "current_phase_id"
+        },
+        "returned_from_phase": {
+          "type": "belongsTo",
+          "target": "procurement_phase",
+          "foreignKey": "returned_from_phase_id"
+        },
+        "creator": {
+          "type": "belongsTo",
+          "target": "user",
+          "foreignKey": "created_by"
+        },
+        "items": {
+          "type": "hasMany",
+          "target": "procurement_item",
+          "collection": true,
+          "orderBy": "line_no"
+        },
+        "root_items": {
+          "type": "hasMany",
+          "target": "procurement_item",
+          "collection": true,
+          "filter": {
+            "parent_id": null
+          },
+          "orderBy": "line_no"
+        },
+        "history": {
+          "type": "hasMany",
+          "target": "procurement_history",
+          "collection": true
+        },
+        "attachments": {
+          "type": "hasMany",
+          "target": "procurement_attachment",
+          "collection": true
+        },
+        "signatories": {
+          "type": "hasMany",
+          "target": "procurement_signatory",
+          "collection": true,
+          "orderBy": "sequence"
+        }
+      }
+    },
+    "procurement_item": {
+      "class": "App\\Models\\Procurement\\ProcurementItem",
+      "table": "procurement_items",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "input": "none",
+          "readOnly": true
+        },
+        "item_bank_item_id": {
+          "type": "integer",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true,
+          "description": "Optional link to the canonical Item Bank entry; never duplicates catalog data."
+        },
+        "line_no": {
+          "type": "integer",
+          "input": "none",
+          "readOnly": true
+        },
+        "parent_id": {
+          "type": "integer",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true
+        },
+        "is_lot": {
+          "type": "boolean",
+          "input": "checkbox",
+          "default": false
+        },
+        "unit": {
+          "type": "string",
+          "input": "text",
+          "maxLength": 50,
+          "nullable": true
+        },
+        "description": {
+          "type": "string",
+          "input": "textarea",
+          "nullable": true,
+          "maxLength": null
+        },
+        "quantity": {
+          "type": "decimal",
+          "input": "number",
+          "precision": 12,
+          "scale": 3,
+          "min": 0,
+          "nullable": true
+        },
+        "cost": {
+          "type": "decimal",
+          "input": "currency",
+          "precision": 15,
+          "scale": 2,
+          "min": 0,
+          "nullable": true,
+          "description": "Unit cost; lot header cost is derived from its sub-items."
+        },
+        "total_cost": {
+          "type": "decimal",
+          "input": "none",
+          "readOnly": true,
+          "derived": "quantity * cost"
+        }
+      },
+      "relationships": {
+        "procurement": {
+          "type": "belongsTo",
+          "target": "procurement",
+          "foreignKey": "procurement_id",
+          "cycle": true
+        },
+        "catalog_item": {
+          "type": "belongsTo",
+          "target": "item_bank_item",
+          "foreignKey": "item_bank_item_id",
+          "nullable": true
+        },
+        "parent": {
+          "type": "belongsTo",
+          "target": "procurement_item",
+          "foreignKey": "parent_id",
+          "cycle": true
+        },
+        "sub_items": {
+          "type": "hasMany",
+          "target": "procurement_item",
+          "collection": true,
+          "foreignKey": "parent_id",
+          "filter": {
+            "is_lot": false
+          },
+          "orderBy": "line_no"
+        }
+      }
+    },
+    "office": {
+      "class": "App\\Models\\Office",
+      "table": "offices",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "input": "none",
+          "readOnly": true
+        },
+        "code": {
+          "type": "string",
+          "input": "text",
+          "maxLength": 32,
+          "unique": true
+        },
+        "name": {
+          "type": "string",
+          "input": "text",
+          "maxLength": null
+        },
+        "location_type": {
+          "type": "enum",
+          "input": "select",
+          "values": [
+            "REGIONAL",
+            "PROVINCIAL"
+          ]
+        },
+        "is_active": {
+          "type": "boolean",
+          "input": "none",
+          "default": true,
+          "readOnly": true
+        }
+      },
+      "relationships": {
+        "procurements": {
+          "type": "hasMany",
+          "target": "procurement",
+          "collection": true,
+          "cycle": true
+        }
+      }
+    },
+    "item_bank_item": {
+      "class": "App\\Models\\Procurement\\ItemBankItem",
+      "table": "item_bank_items",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "input": "none",
+          "readOnly": true
+        },
+        "item_code": {
+          "type": "string",
+          "input": "none",
+          "nullable": true,
+          "maxLength": 64,
+          "readOnly": true
+        },
+        "description": {
+          "type": "string",
+          "input": "none",
+          "maxLength": 255,
+          "readOnly": true
+        },
+        "category": {
+          "type": "string",
+          "input": "none",
+          "nullable": true,
+          "maxLength": 120,
+          "readOnly": true
+        },
+        "unit": {
+          "type": "string",
+          "input": "none",
+          "nullable": true,
+          "maxLength": 64,
+          "readOnly": true
+        },
+        "specifications": {
+          "type": "string",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true
+        },
+        "reference_price": {
+          "type": "decimal",
+          "input": "none",
+          "nullable": true,
+          "precision": 15,
+          "scale": 2,
+          "readOnly": true
+        },
+        "price_source": {
+          "type": "string",
+          "input": "none",
+          "nullable": true,
+          "maxLength": 255,
+          "readOnly": true
+        },
+        "reference_date": {
+          "type": "date",
+          "input": "none",
+          "readOnly": true
+        },
+        "is_active": {
+          "type": "boolean",
+          "input": "none",
+          "default": true,
+          "readOnly": true
+        }
+      },
+      "relationships": {
+        "procurement_items": {
+          "type": "hasMany",
+          "target": "procurement_item",
+          "collection": true,
+          "foreignKey": "item_bank_item_id",
+          "cycle": true
+        }
+      }
+    },
+    "procurement_mode": {
+      "class": "App\\Models\\ProcurementMode\\ProcurementMode",
+      "table": "procurement_modes",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "input": "none",
+          "readOnly": true
+        },
+        "code": {
+          "type": "string",
+          "input": "none",
+          "maxLength": 64,
+          "unique": true,
+          "readOnly": true
+        },
+        "name": {
+          "type": "string",
+          "input": "none",
+          "readOnly": true
+        },
+        "min_abc": {
+          "type": "decimal",
+          "input": "none",
+          "precision": 15,
+          "scale": 2,
+          "default": 0,
+          "readOnly": true
+        },
+        "max_abc": {
+          "type": "decimal",
+          "input": "none",
+          "precision": 15,
+          "scale": 2,
+          "nullable": true,
+          "readOnly": true
+        },
+        "description": {
+          "type": "string",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true
+        },
+        "is_active": {
+          "type": "boolean",
+          "input": "none",
+          "default": true,
+          "readOnly": true
+        }
+      },
+      "relationships": {
+        "phases": {
+          "type": "hasMany",
+          "target": "procurement_phase",
+          "collection": true,
+          "orderBy": "phase_sequence"
+        },
+        "procurements": {
+          "type": "hasMany",
+          "target": "procurement",
+          "collection": true,
+          "cycle": true
+        }
+      }
+    },
+    "procurement_phase": {
+      "class": "App\\Models\\ProcurementMode\\ProcurementModePhase",
+      "table": "procurement_mode_phases",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "input": "none",
+          "readOnly": true
+        },
+        "phase_sequence": {
+          "type": "integer",
+          "input": "none",
+          "min": 1,
+          "readOnly": true
+        },
+        "phase_name": {
+          "type": "string",
+          "input": "none",
+          "readOnly": true
+        },
+        "description": {
+          "type": "string",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true
+        },
+        "allowable_days": {
+          "type": "integer",
+          "input": "none",
+          "min": 0,
+          "default": 7,
+          "readOnly": true
+        }
+      },
+      "relationships": {
+        "mode": {
+          "type": "belongsTo",
+          "target": "procurement_mode",
+          "foreignKey": "procurement_mode_id",
+          "cycle": true
+        },
+        "attachments": {
+          "type": "hasMany",
+          "target": "configured_attachment",
+          "collection": true
+        },
+        "roles": {
+          "type": "belongsToMany",
+          "target": "role",
+          "collection": true,
+          "pivotFields": [
+            "can_act"
+          ]
+        }
+      }
+    },
+    "configured_attachment": {
+      "class": "App\\Models\\ProcurementMode\\Attachment",
+      "table": "attachments",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "input": "none",
+          "readOnly": true
+        },
+        "name": {
+          "type": "string",
+          "input": "none",
+          "readOnly": true
+        },
+        "is_mandatory": {
+          "type": "boolean",
+          "input": "none",
+          "default": true,
+          "readOnly": true
+        },
+        "is_active": {
+          "type": "boolean",
+          "input": "none",
+          "default": true,
+          "readOnly": true
+        }
+      },
+      "relationships": {
+        "phase": {
+          "type": "belongsTo",
+          "target": "procurement_phase",
+          "cycle": true
+        },
+        "form": {
+          "type": "belongsTo",
+          "target": "form_template"
+        },
+        "signatories": {
+          "type": "hasMany",
+          "target": "configured_signatory",
+          "collection": true,
+          "orderBy": "sequence"
+        }
+      }
+    },
+    "configured_signatory": {
+      "class": "App\\Models\\ProcurementMode\\AttachmentSignatory",
+      "table": "attachment_signatories",
+      "fields": {
+        "sequence": {
+          "type": "integer",
+          "input": "none",
+          "min": 1,
+          "readOnly": true
+        }
+      },
+      "relationships": {
+        "role": {
+          "type": "belongsTo",
+          "target": "role"
+        }
+      }
+    },
+    "form_template": {
+      "class": "App\\Models\\ProcurementMode\\Form",
+      "table": "forms",
+      "fields": {
+        "code": {
+          "type": "string",
+          "input": "none",
+          "readOnly": true
+        },
+        "name": {
+          "type": "string",
+          "input": "none",
+          "readOnly": true
+        },
+        "description": {
+          "type": "string",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true
+        },
+        "status": {
+          "type": "string",
+          "input": "none",
+          "default": "draft",
+          "readOnly": true
+        },
+        "configuration": {
+          "type": "object",
+          "input": "none",
+          "readOnly": true
+        }
+      }
+    },
+    "procurement_attachment": {
+      "class": "App\\Models\\Procurement\\ProcurementAttachment",
+      "table": "procurement_attachments",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "input": "none",
+          "readOnly": true
+        },
+        "workflow_status": {
+          "type": "enum",
+          "input": "none",
+          "default": "INCOMPLETE",
+          "readOnly": true
+        },
+        "is_completed": {
+          "type": "boolean",
+          "input": "none",
+          "default": false,
+          "readOnly": true
+        },
+        "file_name": {
+          "type": "string",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true
+        },
+        "form_data": {
+          "type": "object",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true,
+          "description": "Submission state, not template-owned data."
+        }
+      },
+      "relationships": {
+        "procurement": {
+          "type": "belongsTo",
+          "target": "procurement",
+          "cycle": true
+        },
+        "configured_attachment": {
+          "type": "belongsTo",
+          "target": "configured_attachment"
+        },
+        "uploader": {
+          "type": "belongsTo",
+          "target": "user"
+        },
+        "signatories": {
+          "type": "hasMany",
+          "target": "procurement_attachment_signatory",
+          "collection": true
+        }
+      }
+    },
+    "procurement_attachment_signatory": {
+      "class": "App\\Models\\Procurement\\ProcurementAttachmentSignatory",
+      "table": "procurement_attachment_signatories",
+      "fields": {
+        "sequence": {
+          "type": "integer",
+          "input": "none",
+          "min": 1,
+          "readOnly": true
+        },
+        "configured_role_id": {
+          "type": "integer",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true
+        },
+        "is_signed": {
+          "type": "boolean",
+          "input": "none",
+          "default": false,
+          "readOnly": true
+        },
+        "signed_at": {
+          "type": "datetime",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true
+        }
+      },
+      "relationships": {
+        "configured_role": {
+          "type": "belongsTo",
+          "target": "role"
+        },
+        "signatory": {
+          "type": "belongsTo",
+          "target": "user"
+        }
+      }
+    },
+    "procurement_signatory": {
+      "class": "App\\Models\\Procurement\\ProcurementSignatory",
+      "table": "procurement_signatories",
+      "fields": {
+        "sequence": {
+          "type": "integer",
+          "input": "none",
+          "min": 1,
+          "readOnly": true
+        },
+        "configured_role_id": {
+          "type": "integer",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true
+        },
+        "is_signed": {
+          "type": "boolean",
+          "input": "none",
+          "default": false,
+          "readOnly": true
+        },
+        "signed_at": {
+          "type": "datetime",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true
+        }
+      },
+      "relationships": {
+        "configured_role": {
+          "type": "belongsTo",
+          "target": "role"
+        },
+        "signatory": {
+          "type": "belongsTo",
+          "target": "user"
+        }
+      }
+    },
+    "procurement_history": {
+      "class": "App\\Models\\Procurement\\ProcurementHistory",
+      "table": "procurement_histories",
+      "fields": {
+        "action": {
+          "type": "string",
+          "input": "none",
+          "maxLength": 64,
+          "readOnly": true
+        },
+        "status_from": {
+          "type": "string",
+          "input": "none",
+          "maxLength": 32,
+          "nullable": true,
+          "readOnly": true
+        },
+        "status_to": {
+          "type": "string",
+          "input": "none",
+          "maxLength": 32,
+          "readOnly": true
+        },
+        "remarks": {
+          "type": "string",
+          "input": "none",
+          "nullable": true,
+          "readOnly": true
+        },
+        "created_at": {
+          "type": "datetime",
+          "input": "none",
+          "readOnly": true
+        }
+      },
+      "relationships": {
+        "phase": {
+          "type": "belongsTo",
+          "target": "procurement_phase"
+        },
+        "user": {
+          "type": "belongsTo",
+          "target": "user"
+        }
+      }
+    },
+    "user": {
+      "class": "App\\Models\\User",
+      "table": "users",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "input": "none",
+          "readOnly": true
+        },
+        "name": {
+          "type": "string",
+          "input": "none",
+          "readOnly": true
+        }
+      },
+      "relationships": {
+        "offices": {
+          "type": "belongsToMany",
+          "target": "office",
+          "collection": true,
+          "cycle": true
+        },
+        "roles": {
+          "type": "belongsToMany",
+          "target": "role",
+          "collection": true
+        }
+      }
+    },
+    "role": {
+      "class": "Spatie\\Permission\\Models\\Role",
+      "table": "roles",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "input": "none",
+          "readOnly": true
+        },
+        "name": {
+          "type": "string",
+          "input": "none",
+          "readOnly": true
+        }
+      }
+    }
+  },
+  "templateBindings": {
+    "procurement.purpose": {
+      "path": "procurement.purpose",
+      "editable": true,
+      "providedBy": "runtimePayload.procurement.purpose",
+      "usedIn": [
+        "ABS",
+        "MIN",
+        "PR",
+        "RES",
+        "RFQ"
+      ],
+      "usage": [
+        "input",
+        "print"
+      ],
+      "transportName": "purpose"
+    },
+    "procurement.pr_number": {
+      "path": "procurement.pr_number",
+      "editable": false,
+      "providedBy": "runtimePayload.procurement.pr_number",
+      "usedIn": [
+        "ABS",
+        "MIN",
+        "PR",
+        "RES",
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "procurement.abc_amount": {
+      "path": "procurement.abc_amount",
+      "editable": false,
+      "providedBy": "runtimePayload.procurement.abc_amount",
+      "usedIn": [
+        "ABS",
+        "MIN",
+        "PR",
+        "RES",
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ],
+      "transportName": "grand_total"
+    },
+    "procurement.rfq_number": {
+      "path": "procurement.rfq_number",
+      "editable": false,
+      "derived": "replace leading PR with RFQ in procurement.pr_number",
+      "usedIn": [
+        "ABS",
+        "MIN",
+        "RES",
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ],
+      "providedBy": "runtimePayload.procurement"
+    },
+    "procurement.is_delivery_cd": {
+      "path": "procurement.is_delivery_cd",
+      "scope": "procurements",
+      "editable": true,
+      "input": "checkbox",
+      "default": false,
+      "usedIn": [
+        "ABS",
+        "RFQ"
+      ],
+      "usage": [
+        "clear-if",
+        "clear-if-not",
+        "input",
+        "show-if",
+        "show-if-not"
+      ],
+      "providedBy": "runtimePayload.procurement"
+    },
+    "procurement.delivery_cd": {
+      "path": "procurement.delivery_cd",
+      "scope": "procurements",
+      "editable": true,
+      "input": "number",
+      "nullable": true,
+      "clearedWhen": "procurement.is_delivery_cd is false",
+      "usedIn": [
+        "ABS",
+        "RFQ"
+      ],
+      "usage": [
+        "input",
+        "print"
+      ],
+      "providedBy": "runtimePayload.procurement"
+    },
+    "procurement.delivery_date": {
+      "path": "procurement.delivery_date",
+      "scope": "procurements",
+      "editable": true,
+      "input": "date",
+      "nullable": true,
+      "clearedWhen": "procurement.is_delivery_cd is true",
+      "usedIn": [
+        "ABS",
+        "RFQ"
+      ],
+      "usage": [
+        "default-from",
+        "input",
+        "print"
+      ],
+      "providedBy": "runtimePayload.procurement"
+    },
+    "procurement.quotation_deadline": {
+      "path": "procurement.quotation_deadline",
+      "scope": "procurements",
+      "editable": true,
+      "input": "datetime-local",
+      "required": true,
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "input"
+      ],
+      "providedBy": "runtimePayload.procurement"
+    },
+    "procurement.end_user_office.name": {
+      "path": "procurement.end_user_office.name",
+      "editable": false,
+      "providedBy": "runtimePayload.procurement.end_user_office.name",
+      "usedIn": [
+        "ABS",
+        "MIN",
+        "PR",
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "procurement.mode.name": {
+      "path": "procurement.mode.name",
+      "editable": false,
+      "providedBy": "runtimePayload.procurement.mode.name",
+      "usedIn": [
+        "ABS",
+        "MIN",
+        "RES",
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "procurement.root_items[]": {
+      "path": "procurement.root_items",
+      "repeatable": true,
+      "itemAlias": "item",
+      "providedBy": "runtimePayload.procurement.root_items"
+    },
+    "procurement.items[]": {
+      "path": "procurement.items",
+      "repeatable": true,
+      "itemAlias": "item",
+      "providedBy": "runtimePayload.procurement.items"
+    },
+    "item.sub_items[]": {
+      "path": "item.sub_items",
+      "repeatable": true,
+      "itemAlias": "subItem",
+      "providedBy": "runtimePayload.procurement.root_items.sub_items"
+    },
+    "item.cost": {
+      "path": "procurement.items.{id}.cost",
+      "scope": "procurement_items",
+      "editable": true,
+      "input": "number",
+      "min": 0,
+      "step": 0.01,
+      "required": true,
+      "requiredCollection": "procurement.items",
+      "leafItemsOnly": true,
+      "derivedUpdates": "procurements.abc_amount = sum(quantity * cost) for non-lot items",
+      "usedIn": [
+        "PR",
+        "RFQ"
+      ],
+      "usage": [
+        "input",
+        "print"
+      ],
+      "transportName": "items[{idx}][cost]"
+    },
+    "rfq.bac_secretariat_name": {
+      "scope": "bound_form.configuration.template_data",
+      "editable": false,
+      "default": "Head, BAC Secretariat",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "rfq.contact_email": {
+      "scope": "bound_form.configuration.template_data",
+      "editable": false,
+      "default": "bac.r2@dict.gov.ph",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "rfq.bac_chairperson": {
+      "scope": "bound_form.configuration.template_data",
+      "editable": false,
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "rfq.required_documents[]": {
+      "scope": "active rfq_documents catalog, ordered by sequence",
+      "repeatable": true,
+      "itemAlias": "document",
+      "fields": {
+        "id": {
+          "type": "integer"
+        },
+        "sequence": {
+          "type": "integer",
+          "default": 1
+        },
+        "label": {
+          "type": "string",
+          "source": "rfq_documents.title",
+          "required": true
+        },
+        "checked_mark": {
+          "type": "string",
+          "default": ""
+        }
+      }
+    },
+    "supplier.designation": {
+      "scope": "attachment.form_data",
+      "editable": true,
+      "input": "text",
+      "persistWithProcurement": false,
+      "savedAt": "existingAttachmentData[attachment_id].form_data[\"supplier.designation\"]",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "input"
+      ]
+    },
+    "supplier.philgeps_number": {
+      "scope": "attachment.form_data",
+      "editable": true,
+      "input": "text",
+      "persistWithProcurement": false,
+      "savedAt": "existingAttachmentData[attachment_id].form_data[\"supplier.philgeps_number\"]",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "input"
+      ]
+    },
+    "supplier.tin": {
+      "scope": "attachment.form_data",
+      "editable": true,
+      "input": "text",
+      "persistWithProcurement": false,
+      "savedAt": "existingAttachmentData[attachment_id].form_data[\"supplier.tin\"]",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "input"
+      ]
+    },
+    "supplier.business_name": {
+      "scope": "attachment.form_data",
+      "editable": true,
+      "input": "text",
+      "persistWithProcurement": false,
+      "savedAt": "existingAttachmentData[attachment_id].form_data[\"supplier.business_name\"]",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "input"
+      ]
+    },
+    "supplier.landbank_account_name": {
+      "scope": "attachment.form_data",
+      "editable": true,
+      "input": "text",
+      "persistWithProcurement": false,
+      "savedAt": "existingAttachmentData[attachment_id].form_data[\"supplier.landbank_account_name\"]",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "input"
+      ]
+    },
+    "supplier.business_address": {
+      "scope": "attachment.form_data",
+      "editable": true,
+      "input": "text",
+      "persistWithProcurement": false,
+      "savedAt": "existingAttachmentData[attachment_id].form_data[\"supplier.business_address\"]",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "input"
+      ]
+    },
+    "supplier.landbank_account_number": {
+      "scope": "attachment.form_data",
+      "editable": true,
+      "input": "text",
+      "persistWithProcurement": false,
+      "savedAt": "existingAttachmentData[attachment_id].form_data[\"supplier.landbank_account_number\"]",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "input"
+      ]
+    },
+    "supplier.contact_number": {
+      "scope": "attachment.form_data",
+      "editable": true,
+      "input": "text",
+      "persistWithProcurement": false,
+      "savedAt": "existingAttachmentData[attachment_id].form_data[\"supplier.contact_number\"]",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "input"
+      ]
+    },
+    "attendee.name": {
+      "path": "attendee.name",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "attendee.position": {
+      "path": "attendee.position",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "attendee.retired": {
+      "path": "attendee.retired",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "MIN"
+      ],
+      "usage": [
+        "show-if"
+      ]
+    },
+    "award.attendees": {
+      "path": "award.attendees",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "MIN"
+      ],
+      "usage": [
+        "each"
+      ]
+    },
+    "award.award_basis": {
+      "path": "award.award_basis",
+      "editable": true,
+      "scope": "attachment.form_data",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "MIN",
+        "RES"
+      ],
+      "usage": [
+        "input",
+        "print"
+      ]
+    },
+    "award.bac_chair_name": {
+      "path": "award.bac_chair_name",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "award.bac_signatories": {
+      "path": "award.bac_signatories",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "RES"
+      ],
+      "usage": [
+        "each"
+      ]
+    },
+    "award.hope_name": {
+      "path": "award.hope_name",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "RES"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "award.hope_position": {
+      "path": "award.hope_position",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "RES"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "award.item_results": {
+      "path": "award.item_results",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "each"
+      ]
+    },
+    "award.opening_date": {
+      "path": "award.opening_date",
+      "editable": true,
+      "scope": "attachment.form_data",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN",
+        "RES"
+      ],
+      "usage": [
+        "input",
+        "print"
+      ]
+    },
+    "award.opening_place": {
+      "path": "award.opening_place",
+      "editable": true,
+      "scope": "attachment.form_data",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "input"
+      ]
+    },
+    "award.opening_time": {
+      "path": "award.opening_time",
+      "editable": true,
+      "scope": "attachment.form_data",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "MIN"
+      ],
+      "usage": [
+        "input"
+      ]
+    },
+    "award.prepared_by_name": {
+      "path": "award.prepared_by_name",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "award.prepared_by_position": {
+      "path": "award.prepared_by_position",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "award.resolution_date": {
+      "path": "award.resolution_date",
+      "editable": true,
+      "scope": "attachment.form_data",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "RES"
+      ],
+      "usage": [
+        "input"
+      ]
+    },
+    "award.resolution_number": {
+      "path": "award.resolution_number",
+      "editable": true,
+      "scope": "attachment.form_data",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "RES"
+      ],
+      "usage": [
+        "input"
+      ]
+    },
+    "award.resolution_place": {
+      "path": "award.resolution_place",
+      "editable": true,
+      "scope": "attachment.form_data",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "RES"
+      ],
+      "usage": [
+        "input"
+      ]
+    },
+    "award.suppliers": {
+      "path": "award.suppliers",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "each"
+      ]
+    },
+    "award.suppliers.length": {
+      "path": "award.suppliers.length",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "award.total_responsive_bid": {
+      "path": "award.total_responsive_bid",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN",
+        "RES"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "award.winning_supplier_name": {
+      "path": "award.winning_supplier_name",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "RES"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "document.checked_mark": {
+      "path": "document.checked_mark",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "document.label": {
+      "path": "document.label",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "document.sequence": {
+      "path": "document.sequence",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "item.description": {
+      "path": "item.description",
+      "editable": true,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "PR",
+        "RFQ"
+      ],
+      "usage": [
+        "input",
+        "print"
+      ],
+      "transportName": "items[{idx}][description]"
+    },
+    "item.is_lot": {
+      "path": "item.is_lot",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "show-if",
+        "show-if-not"
+      ]
+    },
+    "item.line_no": {
+      "path": "item.line_no",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "PR",
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "item.quantity": {
+      "path": "item.quantity",
+      "editable": true,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "PR",
+        "RFQ"
+      ],
+      "usage": [
+        "input",
+        "print"
+      ],
+      "transportName": "items[{idx}][quantity]"
+    },
+    "item.unit": {
+      "path": "item.unit",
+      "editable": true,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "PR",
+        "RFQ"
+      ],
+      "usage": [
+        "input",
+        "print"
+      ],
+      "transportName": "items[{idx}][unit]"
+    },
+    "subitem.cost": {
+      "path": "procurement.items.{id}.cost",
+      "editable": true,
+      "input": "number",
+      "scope": "procurement_items",
+      "min": 0,
+      "step": 0.01,
+      "required": true,
+      "requiredCollection": "procurement.items",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "input",
+        "print"
+      ],
+      "providedBy": "runtimePayload.procurement.root_items.sub_items"
+    },
+    "subitem.description": {
+      "path": "procurement.items.{id}.description",
+      "editable": false,
+      "scope": "procurement_items",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ],
+      "providedBy": "runtimePayload.procurement.root_items.sub_items"
+    },
+    "subitem.line_no": {
+      "path": "procurement.items.{id}.line_no",
+      "editable": false,
+      "scope": "procurement_items",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ],
+      "providedBy": "runtimePayload.procurement.root_items.sub_items"
+    },
+    "subitem.quantity": {
+      "path": "procurement.items.{id}.quantity",
+      "editable": false,
+      "scope": "procurement_items",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "print"
+      ],
+      "providedBy": "runtimePayload.procurement.root_items.sub_items"
+    },
+    "procurement.root_items": {
+      "path": "procurement.root_items",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Ordered top-level procurement items with sub-items; used by RFQ row rendering.",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "each"
+      ],
+      "providedBy": "runtimePayload.procurement.root_items"
+    },
+    "procurement.items": {
+      "path": "procurement.items",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "PR",
+        "RFQ"
+      ],
+      "usage": [
+        "each"
+      ],
+      "providedBy": "runtimePayload.procurement"
+    },
+    "procurement.rfq_documents": {
+      "path": "procurement.rfq_documents",
+      "editable": false,
+      "scope": "procurement_required_docs",
+      "note": "Selected RFQ document ids; selection changes are persisted by the RFQ checklist endpoint.",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "checklist-state"
+      ],
+      "providedBy": "runtimePayload.procurement.rfq_documents"
+    },
+    "quote.amount": {
+      "path": "quote.amount",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "quote.brand_remarks": {
+      "path": "quote.brand_remarks",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS"
+      ],
+      "usage": [
+        "print",
+        "show-if"
+      ]
+    },
+    "quote.compliance": {
+      "path": "quote.compliance",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS"
+      ],
+      "usage": [
+        "print",
+        "show-if"
+      ]
+    },
+    "quote.remarks": {
+      "path": "quote.remarks",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "MIN"
+      ],
+      "usage": [
+        "print",
+        "show-if"
+      ]
+    },
+    "quote.supplier_name": {
+      "path": "quote.supplier_name",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "result.item.description": {
+      "path": "result.item.description",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "result.item.line_no": {
+      "path": "result.item.line_no",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "result.item.quantity": {
+      "path": "result.item.quantity",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "result.item.unit": {
+      "path": "result.item.unit",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "result.quotes": {
+      "path": "result.quotes",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "each"
+      ]
+    },
+    "result.winning_amount": {
+      "path": "result.winning_amount",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "result.winning_remarks": {
+      "path": "result.winning_remarks",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "result.winning_supplier_name": {
+      "path": "result.winning_supplier_name",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "rfq.required_documents": {
+      "path": "rfq.required_documents",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Active rfq_documents rows are rendered; checked_mark is set when the document id is present in procurement.rfq_documents. Clicks update procurement_required_docs.",
+      "usedIn": [
+        "RFQ"
+      ],
+      "usage": [
+        "each"
+      ]
+    },
+    "signatory.name": {
+      "path": "signatory.name",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "RES"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "signatory.position": {
+      "path": "signatory.position",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "RES"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "supplier.name": {
+      "path": "supplier.name",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "supplier.total_bid": {
+      "path": "supplier.total_bid",
+      "editable": false,
+      "scope": "template_context",
+      "note": "Declared by one or more imported form templates; field ownership is defined in formTemplates and runtimePayload.",
+      "usedIn": [
+        "ABS",
+        "MIN"
+      ],
+      "usage": [
+        "print"
+      ]
+    },
+    "procurement.end_user_office_id": {
+      "path": "procurement.end_user_office_id",
+      "usedIn": [
+        "PR"
+      ],
+      "usage": [
+        "input"
+      ],
+      "editable": true,
+      "providedBy": "runtimePayload.procurement",
+      "transportName": "end_user_office_id"
+    },
+    "procurement.fund_cluster": {
+      "path": "procurement.fund_cluster",
+      "usedIn": [
+        "PR"
+      ],
+      "usage": [
+        "input"
+      ],
+      "editable": true,
+      "providedBy": "runtimePayload.procurement",
+      "transportName": "fund_cluster"
+    },
+    "procurement.pr_date": {
+      "path": "procurement.pr_date",
+      "usedIn": [
+        "PR"
+      ],
+      "usage": [
+        "input"
+      ],
+      "editable": true,
+      "providedBy": "runtimePayload.procurement",
+      "transportName": "pr_date"
+    },
+    "procurement.responsibility_code": {
+      "path": "procurement.responsibility_code",
+      "usedIn": [
+        "PR"
+      ],
+      "usage": [
+        "input"
+      ],
+      "editable": true,
+      "providedBy": "runtimePayload.procurement",
+      "transportName": "responsibility_code"
+    },
+    "item.total_cost": {
+      "path": "item.total_cost",
+      "usedIn": [
+        "PR"
+      ],
+      "usage": [
+        "print"
+      ],
+      "editable": false,
+      "scope": "procurement.items[]",
+      "transportName": "items[{idx}][total]"
+    }
+  },
+  "notes": [
+    "This is a reviewed form-facing allowlist, not a reflection of every column or Eloquent relation.",
+    "Template data is separate from template records. Values bind to procurement records or explicitly configured RFQ settings.",
+    "Never allow a template to mass-assign model fields directly; validate and map permitted paths in application code.",
+    "Relationship traversal is limited to five levels, stops on marked cycles, and should only serialize explicitly listed fields.",
+    "Database migrations are authoritative for column length, precision, scale, nullability, and defaults; update this snapshot when those change."
+  ],
+  "formContexts": {
+    "rfq": {
+      "source": "forms.RFQ.configuration.template_data plus active rfq_documents catalog",
+      "fields": {
+        "bac_secretariat_name": "string",
+        "contact_email": "string",
+        "bac_chairperson": "string",
+        "required_documents": "array<{id:int,sequence:int,label:string,checked_mark:string}>"
+      }
+    },
+    "supplier": {
+      "source": "attachment.form_data",
+      "fields": {
+        "designation": "string",
+        "philgeps_number": "string",
+        "tin": "string",
+        "business_name": "string",
+        "landbank_account_name": "string",
+        "landbank_account_number": "string",
+        "business_address": "string",
+        "contact_number": "string"
+      }
+    },
+    "award": {
+      "source": "attachment.form_data",
+      "description": "Form submission context for MIN, ABS, and RES. Editable award inputs and calculated bid data are persisted with the attachment submission until award persistence is introduced.",
+      "fields": {
+        "opening_date": "date",
+        "opening_time": "string",
+        "opening_place": "string",
+        "award_basis": "string",
+        "resolution_date": "date",
+        "resolution_number": "string",
+        "resolution_place": "string",
+        "prepared_by_name": "string",
+        "prepared_by_position": "string",
+        "bac_chair_name": "string",
+        "hope_name": "string",
+        "hope_position": "string",
+        "total_responsive_bid": "decimal",
+        "winning_supplier_name": "string",
+        "suppliers": "array<{name:string,total_bid:decimal}>",
+        "attendees": "array<{name:string,position:string,retired:boolean}>",
+        "bac_signatories": "array<{name:string,position:string}>",
+        "item_results": "array<{item:procurement_item,quotes:quote[],winning_supplier_name:string,winning_amount:decimal,winning_remarks:string}>"
+      }
+    },
+    "quote": {
+      "source": "award.item_results[].quotes[]",
+      "fields": {
+        "supplier_name": "string",
+        "amount": "decimal",
+        "remarks": "string",
+        "brand_remarks": "string",
+        "compliance": "string"
+      }
+    },
+    "result": {
+      "source": "award.item_results[]",
+      "fields": {
+        "item": "procurement_item",
+        "quotes": "quote[]",
+        "winning_supplier_name": "string",
+        "winning_amount": "decimal",
+        "winning_remarks": "string"
+      }
+    },
+    "attendee": {
+      "source": "award.attendees[]",
+      "fields": {
+        "name": "string",
+        "position": "string",
+        "retired": "boolean"
+      }
+    },
+    "signatory": {
+      "source": "award.bac_signatories[]",
+      "fields": {
+        "name": "string",
+        "position": "string"
+      }
+    },
+    "document": {
+      "source": "rfq.required_documents[]",
+      "fields": {
+        "id": "integer",
+        "sequence": "integer",
+        "label": "string",
+        "checked_mark": "string"
+      }
+    }
+  },
+  "formTemplates": {
+    "PR": {
+      "source": "import_forms/PR.html",
+      "schemaVersion": 1,
+      "renderer": "data-bindings-v1",
+      "repeatRenderer": "custom-row-editor",
+      "bindings": {
+        "data-input": [
+          "item.cost",
+          "item.description",
+          "item.quantity",
+          "item.unit",
+          "procurement.end_user_office_id",
+          "procurement.fund_cluster",
+          "procurement.pr_date",
+          "procurement.purpose",
+          "procurement.responsibility_code"
+        ],
+        "data-print": [
+          "item.line_no",
+          "item.total_cost",
+          "procurement.abc_amount",
+          "procurement.pr_number"
+        ],
+        "data-each": [
+          "procurement.items"
+        ]
+      },
+      "fields": {
+        "item.cost": {
+          "inputType": "number",
+          "transportName": "items[{idx}][cost]",
+          "required": true,
+          "min": "1",
+          "step": "1",
+          "label": "Item unit cost",
+          "placeholder": "-"
+        },
+        "item.description": {
+          "inputType": "textarea",
+          "transportName": "items[{idx}][description]",
+          "required": true,
+          "placeholder": "Description"
+        },
+        "item.quantity": {
+          "inputType": "number",
+          "transportName": "items[{idx}][quantity]",
+          "required": true,
+          "min": "1",
+          "step": "1",
+          "label": "Item quantity",
+          "placeholder": "-"
+        },
+        "item.unit": {
+          "inputType": "text",
+          "transportName": "items[{idx}][unit]",
+          "required": true,
+          "label": "Item unit",
+          "placeholder": "Unit"
+        },
+        "procurement.end_user_office_id": {
+          "inputType": "select",
+          "transportName": "end_user_office_id",
+          "source": "offices",
+          "required": true,
+          "label": "Office / Section",
+          "placeholder": "Select Office"
+        },
+        "procurement.fund_cluster": {
+          "inputType": "select",
+          "transportName": "fund_cluster",
+          "source": "fund_clusters",
+          "required": true,
+          "label": "Fund Cluster",
+          "placeholder": "Select Fund Cluster"
+        },
+        "procurement.pr_date": {
+          "inputType": "date",
+          "transportName": "pr_date",
+          "required": true,
+          "label": "Purchase Request date",
+          "placeholder": " "
+        },
+        "procurement.purpose": {
+          "inputType": "textarea",
+          "transportName": "purpose",
+          "required": true,
+          "placeholder": "Enter purpose or justification..."
+        },
+        "procurement.responsibility_code": {
+          "inputType": "text",
+          "transportName": "responsibility_code",
+          "required": true,
+          "label": "Responsibility Center Code",
+          "placeholder": "Code"
+        }
+      },
+      "actions": {
+        "rowActions": {
+          "pr-action-add_above": "add_above",
+          "pr-action-add_below": "add_below",
+          "pr-action-add_lot_above": "add_lot_above",
+          "pr-action-add_lot_below": "add_lot_below",
+          "pr-action-add_member_above": "add_member_above",
+          "pr-action-add_member_below": "add_member_below",
+          "pr-action-delete": "delete",
+          "pr-action-delete_lot": "delete_lot"
+        },
+        "addRows": {
+          "pr-add-row-standalone": "standalone",
+          "pr-add-row-lot": "lot"
+        }
+      },
+      "displayFormats": {}
+    },
+    "RFQ": {
+      "source": "import_forms/RFQ.html",
+      "schemaVersion": 1,
+      "renderer": "data-bindings-v1",
+      "repeatRenderer": "declarative-collection",
+      "bindings": {
+        "data-input": [
+          "item.cost",
+          "procurement.delivery_cd",
+          "procurement.delivery_date",
+          "procurement.is_delivery_cd",
+          "procurement.quotation_deadline",
+          "subitem.cost"
+        ],
+        "data-print": [
+          "document.checked_mark",
+          "document.label",
+          "document.sequence",
+          "item.cost",
+          "item.description",
+          "item.line_no",
+          "item.quantity",
+          "item.unit",
+          "procurement.abc_amount",
+          "procurement.end_user_office.name",
+          "procurement.mode.name",
+          "procurement.pr_number",
+          "procurement.purpose",
+          "procurement.rfq_number",
+          "rfq.bac_secretariat_name",
+          "rfq.contact_email",
+          "subitem.cost",
+          "subitem.description",
+          "subitem.line_no",
+          "subitem.quantity"
+        ],
+        "data-each": [
+          "procurement.root_items",
+          "rfq.required_documents"
+        ],
+        "data-show-if": [
+          "item.is_lot",
+          "procurement.is_delivery_cd"
+        ],
+        "data-show-if-not": [
+          "item.is_lot",
+          "procurement.is_delivery_cd"
+        ],
+        "data-default-from": [
+          "procurement.delivery_date"
+        ],
+        "data-clear-if": [
+          "procurement.is_delivery_cd"
+        ],
+        "data-clear-if-not": [
+          "procurement.is_delivery_cd"
+        ]
+      },
+      "fields": {
+        "item.cost": {
+          "inputType": "number",
+          "required": true,
+          "min": "0",
+          "step": "0.01",
+          "format": "currency",
+          "label": "ABC per unit",
+          "requiredCollection": "procurement.items"
+        },
+        "subitem.cost": {
+          "inputType": "number",
+          "required": true,
+          "min": "0",
+          "step": "0.01",
+          "format": "currency",
+          "label": "ABC per unit",
+          "requiredCollection": "procurement.items"
+        },
+        "procurement.delivery_cd": {
+          "inputType": "number",
+          "required": true,
+          "min": "1",
+          "step": "1",
+          "unit": "day(s)",
+          "default": "7",
+          "label": "Delivery duration in calendar days"
+        },
+        "procurement.delivery_date": {
+          "inputType": "date",
+          "required": true,
+          "defaultFrom": "procurement.delivery_date",
+          "format": "date:dd-Mmm-yyyy",
+          "label": "Delivery date"
+        },
+        "procurement.is_delivery_cd": {
+          "inputType": "select",
+          "options": [
+            {
+              "value": "true",
+              "label": "Delivery Period (CD)"
+            },
+            {
+              "value": "false",
+              "label": "Delivery Date"
+            }
+          ]
+        },
+        "procurement.quotation_deadline": {
+          "inputType": "datetime-local",
+          "required": true,
+          "format": "date:MMMM d, yyyy, hh:mm a",
+          "label": "Quotation Submission Deadline"
+        }
+      },
+      "actions": {},
+      "displayFormats": {
+        "item.description": [
+          "multiline"
+        ],
+        "item.cost": [
+          "currency"
+        ],
+        "procurement.abc_amount": [
+          "currency"
+        ],
+        "subitem.cost": [
+          "currency"
+        ],
+        "subitem.description": [
+          "multiline"
+        ]
+      }
+    },
+    "MIN": {
+      "source": "import_forms/MIN.html",
+      "schemaVersion": 1,
+      "renderer": "data-bindings-v1",
+      "repeatRenderer": "declarative-collection",
+      "bindings": {
+        "data-input": [
+          "award.award_basis",
+          "award.opening_date",
+          "award.opening_place",
+          "award.opening_time"
+        ],
+        "data-print": [
+          "attendee.name",
+          "attendee.position",
+          "award.bac_chair_name",
+          "award.prepared_by_name",
+          "award.prepared_by_position",
+          "award.suppliers.length",
+          "award.total_responsive_bid",
+          "procurement.abc_amount",
+          "procurement.end_user_office.name",
+          "procurement.mode.name",
+          "procurement.pr_number",
+          "procurement.purpose",
+          "procurement.rfq_number",
+          "quote.amount",
+          "quote.remarks",
+          "quote.supplier_name",
+          "result.item.description",
+          "result.item.line_no",
+          "result.item.quantity",
+          "result.item.unit",
+          "result.winning_amount",
+          "result.winning_supplier_name",
+          "supplier.name",
+          "supplier.total_bid"
+        ],
+        "data-each": [
+          "award.attendees",
+          "award.item_results",
+          "award.suppliers",
+          "result.quotes"
+        ],
+        "data-show-if": [
+          "attendee.retired",
+          "quote.remarks"
+        ]
+      },
+      "fields": {
+        "award.award_basis": {
+          "inputType": "select",
+          "required": true,
+          "label": "Award basis",
+          "options": [
+            {
+              "value": "LOT",
+              "label": "Per LOT basis"
+            },
+            {
+              "value": "ITEM",
+              "label": "Per ITEM basis"
+            }
+          ]
+        },
+        "award.opening_date": {
+          "inputType": "date",
+          "required": true,
+          "format": "date:MMMM d, yyyy",
+          "label": "Opening date"
+        },
+        "award.opening_place": {
+          "inputType": "text",
+          "required": true,
+          "default": "DICT - Region 02, Tuguegarao City, Cagayan",
+          "label": "Opening place"
+        },
+        "award.opening_time": {
+          "inputType": "text",
+          "required": true,
+          "label": "Opening time"
+        }
+      },
+      "actions": {},
+      "displayFormats": {
+        "award.total_responsive_bid": [
+          "currency"
+        ],
+        "procurement.abc_amount": [
+          "currency"
+        ],
+        "quote.amount": [
+          "currency"
+        ],
+        "result.winning_amount": [
+          "currency"
+        ],
+        "supplier.total_bid": [
+          "currency"
+        ]
+      }
+    },
+    "ABS": {
+      "source": "import_forms/ABS.html",
+      "schemaVersion": 1,
+      "renderer": "data-bindings-v1",
+      "repeatRenderer": "declarative-collection",
+      "bindings": {
+        "data-input": [
+          "award.opening_place"
+        ],
+        "data-print": [
+          "award.opening_date",
+          "award.total_responsive_bid",
+          "award.winning_supplier_name",
+          "procurement.abc_amount",
+          "procurement.delivery_cd",
+          "procurement.delivery_date",
+          "procurement.end_user_office.name",
+          "procurement.mode.name",
+          "procurement.pr_number",
+          "procurement.purpose",
+          "procurement.rfq_number",
+          "quote.amount",
+          "quote.brand_remarks",
+          "quote.compliance",
+          "quote.supplier_name",
+          "result.item.description",
+          "result.item.line_no",
+          "result.item.quantity",
+          "result.item.unit",
+          "result.winning_amount",
+          "result.winning_remarks",
+          "result.winning_supplier_name",
+          "signatory.name",
+          "signatory.position",
+          "supplier.name",
+          "supplier.total_bid"
+        ],
+        "data-each": [
+          "award.bac_signatories",
+          "award.item_results",
+          "award.suppliers",
+          "result.quotes"
+        ],
+        "data-show-if": [
+          "procurement.is_delivery_cd",
+          "quote.brand_remarks",
+          "quote.compliance"
+        ],
+        "data-show-if-not": [
+          "procurement.is_delivery_cd"
+        ]
+      },
+      "fields": {
+        "award.opening_place": {
+          "inputType": "text",
+          "required": true,
+          "label": "Opening place"
+        }
+      },
+      "actions": {},
+      "displayFormats": {
+        "award.opening_date": [
+          "date:MMMM d, yyyy"
+        ],
+        "award.total_responsive_bid": [
+          "currency"
+        ],
+        "procurement.abc_amount": [
+          "currency"
+        ],
+        "procurement.delivery_date": [
+          "date:MMMM d, yyyy"
+        ],
+        "quote.amount": [
+          "currency"
+        ],
+        "result.winning_amount": [
+          "currency"
+        ],
+        "supplier.total_bid": [
+          "currency"
+        ]
+      }
+    },
+    "RES": {
+      "source": "import_forms/RES.html",
+      "schemaVersion": 1,
+      "renderer": "data-bindings-v1",
+      "repeatRenderer": "declarative-collection",
+      "bindings": {
+        "data-input": [
+          "award.resolution_date",
+          "award.resolution_number",
+          "award.resolution_place"
+        ],
+        "data-print": [
+          "award.award_basis",
+          "award.hope_name",
+          "award.hope_position",
+          "award.opening_date",
+          "award.total_responsive_bid",
+          "award.winning_supplier_name",
+          "procurement.abc_amount",
+          "procurement.mode.name",
+          "procurement.pr_number",
+          "procurement.purpose",
+          "procurement.rfq_number",
+          "signatory.name",
+          "signatory.position"
+        ],
+        "data-each": [
+          "award.bac_signatories"
+        ]
+      },
+      "fields": {
+        "award.resolution_date": {
+          "inputType": "date",
+          "required": true,
+          "format": "date:MMMM d, yyyy",
+          "label": "Resolution date"
+        },
+        "award.resolution_number": {
+          "inputType": "text",
+          "required": true,
+          "label": "BAC resolution number"
+        },
+        "award.resolution_place": {
+          "inputType": "text",
+          "required": true,
+          "default": "DICT - Region 02, Tuguegarao City, Cagayan",
+          "label": "Resolution venue"
+        }
+      },
+      "actions": {},
+      "displayFormats": {
+        "award.opening_date": [
+          "date:MMMM d, yyyy"
+        ],
+        "award.total_responsive_bid": [
+          "currency"
+        ],
+        "procurement.abc_amount": [
+          "currency"
+        ]
+      }
+    }
+  },
+  "syncPolicy": {
+    "sourceOfTruth": "database/form-schemas/procurement.json",
+    "checkedBy": "Database\\Seeders\\ProcurementFormSeeder::assertImportedTemplatesMatchSchema",
+    "behavior": "All source forms use declared data-* bindings. The seeder rejects undeclared or drifted bindings, inline handlers, and executable Blade directives."
+  },
+  "templateAttributeContract": {
+    "data-input": "Editable path. data-input-type selects the control; data-source identifies a JSON source for select controls.",
+    "data-print": "Read-only path rendered from the supplied context.",
+    "data-each": "Collection path. data-as names the row alias. data-renderer may select a collection-specific editor while preserving this binding.",
+    "data-required": "Required-field marker used by live validation and form compilation.",
+    "data-format": "Optional display format; supports currency, number, and date:<pattern>.",
+    "data-default": "Literal initial value for an empty editable binding.",
+    "data-default-from": "Path supplying an initial value when the binding is empty.",
+    "data-input-type": "Expected editor: text, textarea, number, date, email, or select.",
+    "data-source": "Named options list from the runtime context for a select editor.",
+    "data-options": "Inline, JSON-encoded select options when the list is template-defined.",
+    "data-min": "Minimum numeric value validated by the editor.",
+    "data-step": "Numeric increment and precision hint.",
+    "data-label": "Human-readable field name used in required-field feedback.",
+    "data-pr-action": "Allow-listed PR row editor action; valid values are recorded per template.",
+    "data-pr-add-row": "Allow-listed PR row kind; valid values are recorded per template.",
+    "data-renderer": "Selects an editor implementation for a collection while keeping its data-each binding authoritative."
+  },
+  "templateActions": {}
+}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BAC Resolution Recommending Award</title>
+    <style>
+        :root{color:#111;font-family:'Palatino Linotype',Palatino,serif;font-size:12px;line-height:1.38}*{box-sizing:border-box}body{margin:0;font:inherit}.rfq-document{width:100%}.center{text-align:center}.left{text-align:left}.identity{margin:5px 0 14px;line-height:1.2}.title{margin:0;padding:6px;background:#ffff99;text-align:center;font-size:15px;font-weight:800}.resolution-number{margin:3px 0 12px;text-align:center}.field{min-height:1.2em;outline:1px solid transparent;outline-offset:1px}.field:hover{background:#eef2ff;outline-color:#cbd5e1;cursor:pointer}.required-empty{background:#fee2e2;outline-color:#fca5a5}.whereas{margin:0 0 10px;text-align:justify;text-indent:32px}.resolved{margin:0 0 9px;text-align:justify;text-indent:32px}.signature-grid{width:100%;border-collapse:collapse;margin-top:12px}.signature-grid td{width:33.333%;padding:12px 10px 4px;text-align:center;vertical-align:top}.signature{height:22px;border-bottom:1px solid #111}.sign-name{font-weight:800}.sign-role{font-style:italic;font-size:10px}.approval{margin-top:26px}.nobreak{break-inside:avoid;page-break-inside:avoid}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+    </style>
+</head>
+<body>
+<main class="rfq-document" data-template-code="RES" data-template-version="1">
+    <header class="center">
+        <section data-header data-title="BAC RESOLUTION RECOMMENDING AWARD"></section>
+        <p class="center" style="margin:7px 0 0;font-weight:700" data-print="procurement.purpose"></p>
+        <p class="resolution-number">BAC Resolution No.: <strong class="field" data-input="award.resolution_number" data-input-type="text" data-required data-label="BAC resolution number"></strong></p>
+    </header>
+
+    <p class="whereas">WHEREAS, the Department of Information and Communications Technology posted an invitation to bid for the procurement of <strong data-print="procurement.purpose"></strong>, with PR No. <strong data-print="procurement.pr_number"></strong>, having an approved budget for the contract of <strong data-print="procurement.abc_amount" data-format="currency"></strong>, under <strong data-print="procurement.mode.name"></strong> as the mode of procurement, with award on a <strong data-print="award.award_basis"></strong> basis;</p>
+
+    <p class="whereas">WHEREAS, the opening of quotations was conducted by the Bids and Awards Committee on <strong data-print="award.opening_date" data-format="date:MMMM d, yyyy"></strong>, and the Abstract of Quotations showed that among the suppliers who submitted quotations, <strong data-print="award.winning_supplier_name"></strong> complied with and was found responsive to the requirements under RFQ No. <strong data-print="procurement.rfq_number"></strong>, with the lowest calculated responsive bid of <strong data-print="award.total_responsive_bid" data-format="currency"></strong>, and with item specifications acceptable to the Technical Working Group and the Implementing Office / End-User Unit concerned;</p>
+
+    <p class="resolved">NOW, THEREFORE, we, the members of the Bids and Awards Committee, hereby resolve to recommend the award of the contract for the procurement described above through <strong data-print="procurement.mode.name"></strong>, in the total amount of <strong data-print="award.total_responsive_bid" data-format="currency"></strong>, to <strong data-print="award.winning_supplier_name"></strong>, which submitted the Lowest Calculated Responsive Bid.</p>
+
+    <p class="resolved">RESOLVED, at <span class="field" data-input="award.resolution_place" data-input-type="text" data-default="DICT - Region 02, Tuguegarao City, Cagayan" data-required data-label="Resolution venue"></span>, this <span class="field" data-input="award.resolution_date" data-input-type="date" data-format="date:MMMM d, yyyy" data-required data-label="Resolution date"></span>.</p>
+
+    <div class="nobreak">
+        <table class="signature-grid"><tbody data-each="award.bac_signatories" data-as="signatory" data-row-template><tr><td><div class="signature"></div><div class="sign-name" data-print="signatory.name"></div><div class="sign-role" data-print="signatory.position"></div></td></tr></tbody></table>
+    </div>
+
+    <div class="approval nobreak">
+        <p><strong>Approved by:</strong></p>
+        <div style="width:48%;margin-top:32px;text-align:center"><div class="signature"></div><strong data-print="award.hope_name"></strong><br><span class="sign-role" data-print="award.hope_position">Head of Procuring Entity (HoPE)</span></div>
+    </div>
+</main>
+</body>
+</html>

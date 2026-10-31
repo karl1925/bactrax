@@ -17,7 +17,14 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             BACTraxMasterSeeder::class,
+            PermissionSeeder::class,
+            FormContentSeeder::class,
+            RfqDocumentSeeder::class,
+            ProcurementFormSeeder::class,
             ProcurementModePhaseSeeder::class,
+            FundClusterSeeder::class,
+            SupplierSeeder::class,
+            ItemBankSeeder::class,
         ]);
     }
 }

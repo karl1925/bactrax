@@ -10,7 +10,7 @@
 	"database": "redis",
 	"databaseConfig": {
 		"redis": {
-			"host": "127.0.0.1",
+			"host": "localhost",
 			"port": "6001",
 			"keyPrefix": ""
 		},
@@ -19,7 +19,7 @@
 		}
 	},
 	"devMode": true,
-	"host": "127.0.0.1",
+	"host": "localhost",
 	"port": "6001",
 	"protocol": "http",
 	"socketio": {},

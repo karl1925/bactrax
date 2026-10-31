@@ -2,24 +2,45 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Procurement\Procurement;
+
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use App\Models\UserSignature;
+use App\Models\ProcurementMode\ProcurementModePhase;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $fillable = ['name', 'email', 'password'];
-    protected $hidden = ['password', 'remember_token'];
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'role',
+        'oidc_sub',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    public function receivesBroadcastNotificationsOn(): string
+    {
+        return 'user.'.$this->getKey();
+    }
 
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'user_roles');
+        return $this->belongsToMany(
+            Role::class,
+            'user_roles',
+            'user_id',
+            'role_id'
+        );
     }
 
     public function offices(): BelongsToMany
@@ -48,7 +69,7 @@ class User extends Authenticatable
             ->whereHas('permissions', function ($query) use ($permission) {
                 $query->where('name', $permission);
             })
-            ->exists();
+            ->exists() || $this->isAdmin();
     }
 
     public function hasPrivilege(string $privilege): bool
@@ -57,14 +78,7 @@ class User extends Authenticatable
             ->whereHas('privileges', function ($query) use ($privilege) {
                 $query->where('code', $privilege);
             })
-            ->exists();
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->roles()
-            ->where('name', 'admin')
-            ->exists();
+            ->exists() || $this->isAdmin();
     }
 
     /**
@@ -74,6 +88,7 @@ class User extends Authenticatable
     {
         return $this->roles()->whereIn('name', [
             'admin',
+            'bac_chair',
             'bac_secretariat',
             'hope',
             'budget_officer',
@@ -82,40 +97,9 @@ class User extends Authenticatable
         ])->exists();
     }
 
-    /**
-     * Determine whether the user is allowed to act on the
-     * currently assigned procurement.
-     *
-     * Rules:
-     * - Admin can always act.
-     * - If the active route targets a specific user,
-     *   only that user can act.
-     * - If no target user is specified, normal phase
-     *   authorization applies.
-     */
+    /** Determine whether the user may act in the procurement's current phase. */
     public function canActOnProcurement(Procurement $procurement): bool
     {
-        $currentRoute = $procurement->currentRoute;
-
-        // No active route — fall back to normal phase authorization.
-        if (!$currentRoute) {
-            return $procurement->currentPhase
-                && $this->canActOnPhase($procurement->currentPhase);
-        }
-
-        // A specific user was targeted.
-        // Only that user may act.
-        if ($currentRoute->to_user_id !== null) {
-            return (int) $currentRoute->to_user_id === (int) $this->id;
-        }
-
-        // Admin can always act.
-        if ($this->isAdmin()) {
-            return true;
-        }
-
-        // No specific user was targeted.
-        // Use normal phase-role authorization.
         return $procurement->currentPhase
             && $this->canActOnPhase($procurement->currentPhase);
     }
@@ -125,23 +109,51 @@ class User extends Authenticatable
      */
     public function canActOnPhase(?ProcurementModePhase $phase): bool
     {
-        if (!$phase) {
-            return false;
-        }
+        if (!$phase) return false;
 
-        $phaseRoleIds = $phase->roles->pluck('id')->toArray();
+        $phaseRoleIds = $phase->roles
+            ->filter(fn($role) => (bool) ($role->pivot?->can_act ?? true))
+            ->pluck('id');
+        if ($phaseRoleIds->isEmpty()) return false;
 
-        // If no roles are configured for the phase step, default to allowing access
-        if (empty($phaseRoleIds)) {
-            return true;
-        }
-
-        // Strictly check if the user holds one of the authorized phase roles
         return $this->roles()->whereIn('roles.id', $phaseRoleIds)->exists();
     }
 
-    public function signature(): HasOne
+    public function isAdmin(): bool
     {
-        return $this->hasOne(UserSignature::class);
+        return $this->roles()
+            ->where('roles.name', 'admin')
+            ->exists();
     }
+
+    public function syncOidcRoles(array $roleNames): array
+    {
+        $allowedRoles = [
+            'admin',
+            'end_user',
+            'canvasser',
+            'budget_officer',
+            'bac_chair',
+            'bac_secretariat',
+            'twg_member',
+            'hope',
+        ];
+
+        $roleNames = collect($roleNames)
+            ->filter(fn($role) => is_string($role))
+            ->map(fn($role) => trim($role))
+            ->filter(fn($role) => in_array($role, $allowedRoles, true))
+            ->unique()
+            ->values();
+
+        $roleIds = Role::query()
+            ->whereIn('name', $roleNames)
+            ->pluck('id')
+            ->all();
+
+        $this->roles()->sync($roleIds);
+
+        return $roleNames->all();
+    }
+
 }

@@ -29,12 +29,28 @@ class BACTraxMasterSeeder extends Seeder
                     'description' => 'Operating Unit',
                 ],
                 [
+                    'name' => 'procurement_unit',
+                    'description' => 'Procurement Unit',
+                ],
+                [
+                    'name' => 'budget_unit',
+                    'description' => 'Budget Unit',
+                ],
+                [
+                    'name' => 'accountant',
+                    'description' => 'Accountant',
+                ],
+                [
                     'name' => 'canvasser',
                     'description' => 'Official Canvasser',
                 ],
                 [
                     'name' => 'budget_officer',
                     'description' => 'Budget Availability Checker',
+                ],
+                [
+                    'name' => 'bac_chair',
+                    'description' => 'Bids and Awards Committee Chairperson',
                 ],
                 [
                     'name' => 'bac_secretariat',
@@ -101,6 +117,16 @@ class BACTraxMasterSeeder extends Seeder
                     'name' => 'Can Reject PR',
                     'description' => 'Reject the procurement request or current procurement phase when it does not meet the applicable requirements or should not proceed.',
                 ],
+                [
+                    'code' => 'can_archive',
+                    'name' => 'Can Archive PR',
+                    'description' => 'Move a procurement request to the archive.',
+                ],
+                [
+                    'code' => 'can_delete',
+                    'name' => 'Can Delete PR',
+                    'description' => 'Delete an archived procurement request and its related records.',
+                ],
 
             ];
 
@@ -126,275 +152,40 @@ class BACTraxMasterSeeder extends Seeder
 
             /*
             |--------------------------------------------------------------------------
-            | 3. Module Permissions
+            | 3. Role Privileges
             |--------------------------------------------------------------------------
             */
 
-            $permissions = [
-
-                // =========================================================
-                // PROCUREMENT
-                // =========================================================
-
-                [
-                    'name' => 'procurement.view',
-                    'module' => 'procurement',
-                    'description' => 'View Purchase Requests and procurement records.',
-                ],
-                [
-                    'name' => 'procurement.add',
-                    'module' => 'procurement',
-                    'description' => 'Create new Purchase Requests.',
-                ],
-                [
-                    'name' => 'procurement.edit',
-                    'module' => 'procurement',
-                    'description' => 'Edit Purchase Requests that are still eligible for modification.',
-                ],
-
-                // =========================================================
-                // SETTINGS
-                // =========================================================
-
-                [
-                    'name' => 'settings.view',
-                    'module' => 'settings',
-                    'description' => 'View and access system settings.',
-                ],
-                [
-                    'name' => 'settings.update',
-                    'module' => 'settings',
-                    'description' => 'Alter system settings.',
-                ],
-
-                // Offices
-                [
-                    'name' => 'offices.view',
-                    'module' => 'settings',
-                    'description' => 'View and manage registered offices.',
-                ],
-                [
-                    'name' => 'offices.add',
-                    'module' => 'settings',
-                    'description' => 'Add new offices to the system.',
-                ],
-                [
-                    'name' => 'offices.edit',
-                    'module' => 'settings',
-                    'description' => 'Edit registered office information.',
-                ],
-                [
-                    'name' => 'offices.toggle_active',
-                    'module' => 'settings',
-                    'description' => 'Edit registered office information.',
-                ],
-                [
-                    'name' => 'offices.delete',
-                    'module' => 'settings',
-                    'description' => 'Delete registered offices from the system.',
-                ],
-
-                // Roles
-                [
-                    'name' => 'roles.view',
-                    'module' => 'settings',
-                    'description' => 'View system roles and their assigned privileges.',
-                ],
-                [
-                    'name' => 'roles.add',
-                    'module' => 'settings',
-                    'description' => 'Create new system roles.',
-                ],
-                [
-                    'name' => 'roles.edit',
-                    'module' => 'settings',
-                    'description' => 'Edit system roles and their assigned privileges.',
-                ],
-                [
-                    'name' => 'roles.delete',
-                    'module' => 'settings',
-                    'description' => 'Delete system roles from the system.',
-                ],
-
-                // Procurement Modes
-                [
-                    'name' => 'modes.view',
-                    'module' => 'settings',
-                    'description' => 'View configured procurement modes.',
-                ],
-                [
-                    'name' => 'modes.add',
-                    'module' => 'settings',
-                    'description' => 'Add new procurement modes and configurations.',
-                ],
-                [
-                    'name' => 'modes.edit',
-                    'module' => 'settings',
-                    'description' => 'Edit procurement mode configurations.',
-                ],
-                [
-                    'name' => 'modes.delete',
-                    'module' => 'settings',
-                    'description' => 'Delete procurement mode configurations.',
-                ],
-
-                // Users
-                [
-                    'name' => 'users.view',
-                    'module' => 'settings',
-                    'description' => 'View registered system users.',
-                ],
-                [
-                    'name' => 'users.add',
-                    'module' => 'settings',
-                    'description' => 'Create new system user accounts.',
-                ],
-                [
-                    'name' => 'users.edit',
-                    'module' => 'settings',
-                    'description' => 'Edit system user accounts and assignments.',
-                ],
-                [
-                    'name' => 'users.delete',
-                    'module' => 'settings',
-                    'description' => 'Delete or deactivate system user accounts.',
-                ],
-
-                // =========================================================
-                // REPORTS
-                // =========================================================
-
-                [
-                    'name' => 'reports.view',
-                    'module' => 'reports',
-                    'description' => 'View procurement reports and generated summaries.',
-                ],
-
+            $rolePrivileges = [
+                'admin' => array_keys($privilegeIds),
+                'end_user' => ['can_route', 'can_cancel'],
+                'procurement_unit' => ['can_route'],
+                'budget_unit' => ['can_route'],
+                'accountant' => ['can_route'],
+                'canvasser' => ['can_route'],
+                'budget_officer' => ['can_route', 'can_return'],
+                'bac_chair' => ['can_route', 'can_return'],
+                'bac_secretariat' => ['can_route', 'can_return'],
+                'twg_member' => ['can_route', 'can_return'],
+                'hope' => ['can_complete', 'can_return', 'can_route', 'can_reject'],
             ];
 
-            $permissionIds = [];
-
-            foreach ($permissions as $permission) {
-
-                DB::table('permissions')->updateOrInsert(
-                    ['name' => $permission['name']],
-                    [
-                        'module' => $permission['module'],
-                        'description' => $permission['description'],
-                        'updated_at' => now(),
-                        'created_at' => now(),
-                    ]
-                );
-
-                $permissionIds[$permission['name']] = DB::table('permissions')
-                    ->where('name', $permission['name'])
-                    ->value('id');
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | 4. Role Capabilities Mapping (Privileges & Permissions for ALL Roles)
-            |--------------------------------------------------------------------------
-            */
-
-            $roleCapabilities = [
-                'admin' => [
-                    'privileges' => ['can_route', 'can_complete', 'can_cancel', 'can_reject', 'can_return'],
-                    'permissions' => array_keys($permissionIds),
-                ],
-                'end_user' => [
-                    'privileges' => ['can_route', 'can_cancel'],
-                    'permissions' => ['procurement.view', 'procurement.add', 'procurement.edit', 'reports.view'],
-                ],
-                'canvasser' => [
-                    'privileges' => ['can_route'],
-                    'permissions' => ['procurement.view'],
-                ],
-                'budget_officer' => [
-                    'privileges' => ['can_route', 'can_return'], // <-- Granted privileges for Budget Officer
-                    'permissions' => ['procurement.view', 'reports.view'],
-                ],
-                'bac_secretariat' => [
-                    'privileges' => ['can_route', 'can_return'],
-                    'permissions' => ['procurement.view', 'procurement.edit', 'reports.view'],
-                ],
-                'twg_member' => [
-                    'privileges' => ['can_route', 'can_return'],
-                    'permissions' => ['procurement.view', 'reports.view'],
-                ],
-                'hope' => [
-                    'privileges' => ['can_complete', 'can_return', 'can_route', 'can_reject'],
-                    'permissions' => ['procurement.view', 'reports.view'],
-                ],
-            ];
-
-            foreach ($roleCapabilities as $roleName => $caps) {
-                if (!isset($roleIds[$roleName])) {
-                    continue;
-                }
-
-                $rId = $roleIds[$roleName];
-
-                // Sync Privileges into role_privileges
-                foreach ($caps['privileges'] as $pCode) {
-                    if (isset($privilegeIds[$pCode])) {
+            foreach ($rolePrivileges as $roleName => $codes) {
+                if (!isset($roleIds[$roleName])) continue;
+                foreach ($codes as $code) {
+                    if (isset($privilegeIds[$code])) {
                         DB::table('role_privileges')->updateOrInsert(
-                            [
-                                'role_id' => $rId,
-                                'privilege_id' => $privilegeIds[$pCode],
-                            ],
-                            []
-                        );
-                    }
-                }
-
-                // Sync Permissions into role_permissions
-                foreach ($caps['permissions'] as $pName) {
-                    if (isset($permissionIds[$pName])) {
-                        DB::table('role_permissions')->updateOrInsert(
-                            [
-                                'role_id' => $rId,
-                                'permission_id' => $permissionIds[$pName],
-                            ],
-                            []
+                            ['role_id' => $roleIds[$roleName], 'privilege_id' => $privilegeIds[$code]], []
                         );
                     }
                 }
             }
 
-            foreach ($roleCapabilities as $roleName => $caps) {
-                if (!isset($roleIds[$roleName])) {
-                    continue;
-                }
-
-                $rId = $roleIds[$roleName];
-
-                // Sync Privileges
-                foreach ($caps['privileges'] as $pCode) {
-                    if (isset($privilegeIds[$pCode])) {
-                        DB::table('role_privileges')->updateOrInsert(
-                            [
-                                'role_id' => $rId,
-                                'privilege_id' => $privilegeIds[$pCode],
-                            ],
-                            []
-                        );
-                    }
-                }
-
-                // Sync Permissions
-                foreach ($caps['permissions'] as $pName) {
-                    if (isset($permissionIds[$pName])) {
-                        DB::table('role_permissions')->updateOrInsert(
-                            [
-                                'role_id' => $rId,
-                                'permission_id' => $permissionIds[$pName],
-                            ],
-                            []
-                        );
-                    }
-                }
+            // PR form modification is managed as the procure.modify_pr_form permission.
+            $obsoletePrFormPrivilegeId = DB::table('privileges')->where('code', 'can_modify_pr_form')->value('id');
+            if ($obsoletePrFormPrivilegeId) {
+                DB::table('role_privileges')->where('privilege_id', $obsoletePrFormPrivilegeId)->delete();
+                DB::table('privileges')->where('id', $obsoletePrFormPrivilegeId)->delete();
             }
 
 
@@ -476,7 +267,6 @@ class BACTraxMasterSeeder extends Seeder
                     ->value('id');
             }
 
-
             /*
             |--------------------------------------------------------------------------
             | 6. Procurement Modes
@@ -490,6 +280,7 @@ class BACTraxMasterSeeder extends Seeder
                     'min_abc' => 2000000.01,
                     'max_abc' => null,
                     'description' => 'Standard Public Bidding',
+                    'is_active' => false,
                 ],
                 [
                     'code' => 'SVP',
@@ -497,6 +288,7 @@ class BACTraxMasterSeeder extends Seeder
                     'min_abc' => 0.00,
                     'max_abc' => 2000000.00,
                     'description' => 'Small Value Procurement',
+                    'is_active' => true,
                 ],
                 [
                     'code' => 'DC',
@@ -504,6 +296,7 @@ class BACTraxMasterSeeder extends Seeder
                     'min_abc' => 0.00,
                     'max_abc' => null,
                     'description' => 'Single Source Procurement',
+                    'is_active' => false,
                 ],
                 [
                     'code' => 'RO',
@@ -511,6 +304,7 @@ class BACTraxMasterSeeder extends Seeder
                     'min_abc' => 0.00,
                     'max_abc' => null,
                     'description' => 'Direct procurement from winning bidder',
+                    'is_active' => false,
                 ],
                 [
                     'code' => 'NPEC',
@@ -518,6 +312,7 @@ class BACTraxMasterSeeder extends Seeder
                     'min_abc' => 0.00,
                     'max_abc' => null,
                     'description' => 'Procurement due to emergency cases',
+                    'is_active' => false,
                 ],
                 [
                     'code' => 'NPTC',
@@ -525,6 +320,7 @@ class BACTraxMasterSeeder extends Seeder
                     'min_abc' => 0.00,
                     'max_abc' => null,
                     'description' => 'Rescinded or terminated contracts',
+                    'is_active' => false,
                 ],
                 [
                     'code' => 'NA',
@@ -532,6 +328,7 @@ class BACTraxMasterSeeder extends Seeder
                     'min_abc' => 0.00,
                     'max_abc' => null,
                     'description' => 'Adjacent or contiguous infrastructure works',
+                    'is_active' => false,
                 ],
                 [
                     'code' => 'SA',
@@ -539,6 +336,7 @@ class BACTraxMasterSeeder extends Seeder
                     'min_abc' => 0.00,
                     'max_abc' => null,
                     'description' => 'Specialized scientific, scholarly, or artistic work',
+                    'is_active' => false,
                 ],
                 [
                     'code' => 'HT',
@@ -546,6 +344,7 @@ class BACTraxMasterSeeder extends Seeder
                     'min_abc' => 0.00,
                     'max_abc' => null,
                     'description' => 'Highly technical consulting services',
+                    'is_active' => false,
                 ],
                 [
                     'code' => 'LRP',
@@ -553,6 +352,7 @@ class BACTraxMasterSeeder extends Seeder
                     'min_abc' => 0.00,
                     'max_abc' => null,
                     'description' => 'Lease of real property, office space, or venue',
+                    'is_active' => false,
                 ],
             ];
 
@@ -565,98 +365,11 @@ class BACTraxMasterSeeder extends Seeder
                         'min_abc' => $mode['min_abc'],
                         'max_abc' => $mode['max_abc'],
                         'description' => $mode['description'],
+                        'is_active' => $mode['is_active'],
                         'updated_at' => now(),
                         'created_at' => now(),
                     ]
                 );
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | 7. User Accounts (1 Account Per Role)
-            |--------------------------------------------------------------------------
-            */
-
-            $usersToSeed = [
-                [
-                    'email' => 'admin@dict.gov.ph',
-                    'name' => 'BACTrax System Administrator',
-                    'role' => 'admin',
-                    'office' => 'ORD',
-                ],
-                [
-                    'email' => 'enduser@dict.gov.ph',
-                    'name' => 'Operating Unit Staff (Cagayan)',
-                    'role' => 'end_user',
-                    'office' => 'CPO',
-                ],
-                [
-                    'email' => 'canvasser@dict.gov.ph',
-                    'name' => 'Official Canvasser',
-                    'role' => 'canvasser',
-                    'office' => 'BAC_SEC',
-                ],
-                [
-                    'email' => 'budget@dict.gov.ph',
-                    'name' => 'AFD Budget Officer',
-                    'role' => 'budget_officer',
-                    'office' => 'AFD',
-                ],
-                [
-                    'email' => 'bacsec@dict.gov.ph',
-                    'name' => 'BAC Secretariat Head',
-                    'role' => 'bac_secretariat',
-                    'office' => 'BAC_SEC',
-                ],
-                [
-                    'email' => 'twg@dict.gov.ph',
-                    'name' => 'Technical Working Group Lead',
-                    'role' => 'twg_member',
-                    'office' => 'TOD',
-                ],
-                [
-                    'email' => 'hope@dict.gov.ph',
-                    'name' => 'Regional Director (HoPE)',
-                    'role' => 'hope',
-                    'office' => 'ORD',
-                ],
-            ];
-
-            foreach ($usersToSeed as $userData) {
-                $user = User::updateOrCreate(
-                    ['email' => $userData['email']],
-                    [
-                        'name' => $userData['name'],
-                        'password' => Hash::make('Password123!'),
-                    ]
-                );
-
-                // Attach Role
-                if (isset($roleIds[$userData['role']])) {
-                    DB::table('user_roles')->updateOrInsert(
-                        [
-                            'user_id' => $user->id,
-                            'role_id' => $roleIds[$userData['role']],
-                        ],
-                        []
-                    );
-                }
-
-                // Attach Primary Office Scope
-                if (isset($officeIds[$userData['office']])) {
-                    DB::table('office_users')->updateOrInsert(
-                        [
-                            'user_id' => $user->id,
-                            'office_id' => $officeIds[$userData['office']],
-                        ],
-                        [
-                            'is_primary' => true,
-                            'updated_at' => now(),
-                            'created_at' => now(),
-                        ]
-                    );
-                }
             }
         });
 
@@ -665,6 +378,14 @@ class BACTraxMasterSeeder extends Seeder
         | System Settings Initial Seed
         |--------------------------------------------------------------------------
         */
+        DB::table('settings')->updateOrInsert(
+            ['key' => 'pr_form'],
+            ['value' => null]
+        );
+        DB::table('settings')->updateOrInsert(
+            ['key' => 'pr_signatories'],
+            ['value' => '["end_user","budget_officer","hope"]', 'group' => 'procurement', 'description' => 'Ordered PR form signatory roles', 'created_at' => now(), 'updated_at' => now()]
+        );
         DB::table('settings')->updateOrInsert(
             ['key' => 'pr_prefix'],
             ['value' => 'PR-', 'group' => 'procurement', 'description' => 'PR Tracking Prefix', 'created_at' => now(), 'updated_at' => now()]
