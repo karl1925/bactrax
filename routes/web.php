@@ -21,7 +21,6 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ItemBankController;
 use App\Http\Controllers\NotificationController;
 
-
 Route::get('/', function() {
     return redirect()->route((auth()->check() ? 'dashboard' : 'login'));
 });
